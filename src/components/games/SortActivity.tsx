@@ -83,10 +83,11 @@ export function SortActivity({ activity, lang, onResolved }: SortActivityProps) 
             onClick={() => handleBucketTap(bucket.id)}
             animate={shakeBucket === bucket.id ? { x: [0, -8, 8, -8, 8, 0] } : {}}
             whileTap={{ scale: 0.95 }}
+            aria-label={tr(bucket.label)}
             className="flex h-28 flex-1 flex-col items-center justify-center gap-1 rounded-3xl border-4 border-dashed border-peach-dark bg-white/70 text-4xl shadow-inner"
           >
             <span aria-hidden>{bucket.icon}</span>
-            <span className="text-sm font-semibold text-choco/70">🧺</span>
+            <span className="text-center text-xs font-semibold leading-tight text-choco/70">{tr(bucket.label)}</span>
           </motion.button>
         ))}
       </div>

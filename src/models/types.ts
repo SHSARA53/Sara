@@ -80,6 +80,14 @@ export interface ActivityResult {
   hintsUsed: number;
   responseTimeMs: number;
   timestamp: number;
+  /**
+   * True for quiz-style activities (FIND/COUNT) where `correct` reflects a
+   * genuine right/wrong answer. MATCH/MEMORY/SORT report every vocab item as
+   * `correct: true` once the game is completed (there's no wrong answer to
+   * a completed sorting game), so they're excluded from accuracy stats to
+   * avoid inflating what "accuracy" means to a parent.
+   */
+  graded: boolean;
 }
 
 export interface LearningSession {

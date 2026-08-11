@@ -19,11 +19,26 @@ export function topicsPracticed(sessions: LearningSession[]): string[] {
   return [...new Set(sessions.flatMap((session) => session.topicIds))];
 }
 
+/** Distinct activities played, not raw per-vocab results - a single 4-pair memory game is one activity, not four. */
+export function activitiesCompletedForSessions(sessions: LearningSession[]): number {
+  const ids = new Set(sessions.flatMap((session) => session.results.map((result) => result.activityId)));
+  return ids.size;
+}
+
+/**
+ * Accuracy over "graded" (quiz-style FIND/COUNT) results only. MATCH/MEMORY/
+ * SORT always resolve as correct once solved, so mixing them in would
+ * inflate the number without meaning anything - falls back to all results
+ * only if the child hasn't done any graded activity yet, so it's never a
+ * confusing empty stat.
+ */
 export function accuracyForSessions(sessions: LearningSession[]): number {
-  const results = sessions.flatMap((session) => session.results);
-  if (results.length === 0) return 0;
-  const correct = results.filter((result) => result.correct).length;
-  return Math.round((correct / results.length) * 100);
+  const allResults = sessions.flatMap((session) => session.results);
+  const graded = allResults.filter((result) => result.graded);
+  const pool = graded.length > 0 ? graded : allResults;
+  if (pool.length === 0) return 0;
+  const correct = pool.filter((result) => result.correct).length;
+  return Math.round((correct / pool.length) * 100);
 }
 
 export interface GroupedSessions {

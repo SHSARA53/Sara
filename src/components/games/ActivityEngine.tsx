@@ -11,7 +11,7 @@ import { FeedbackBanner } from "./FeedbackBanner";
 import { Confetti } from "../common/Confetti";
 import { Mascot, type MascotMood } from "../mascot/Mascot";
 import { useLang } from "../../hooks/useLang";
-import { speak } from "../../services/audio/audioService";
+import { speak, stopSpeaking } from "../../services/audio/audioService";
 import { successPhrases, encouragePhrases, revealPhrases } from "../../locales/phrases";
 import { pick } from "../../utils/rng";
 
@@ -32,15 +32,28 @@ export function ActivityEngine({ activity, onComplete }: ActivityEngineProps) {
   const [mascotMood, setMascotMood] = useState<MascotMood>("idle");
   const [showConfetti, setShowConfetti] = useState(false);
   const startRef = useRef(Date.now());
+  // Belt-and-suspenders: even if a sub-activity's own guard ever slips (a
+  // stray tap resolving twice), this stops a second onComplete from firing
+  // for the same activity - which would otherwise double-record the answer
+  // and skip the next activity in the session.
+  const resolvedForRef = useRef<string | null>(null);
 
   useEffect(() => {
     startRef.current = Date.now();
+    resolvedForRef.current = null;
     setFeedback(null);
     setMascotMood("idle");
     setShowConfetti(false);
+    // Don't let a lingering "great job!" from the previous activity bleed
+    // into this one's prompt.
+    stopSpeaking();
+    return () => stopSpeaking();
   }, [activity.id]);
 
   const handleResolved = (outcome: ActivityOutcome) => {
+    if (resolvedForRef.current === activity.id) return;
+    resolvedForRef.current = activity.id;
+
     const correctRatio = outcome.vocabResults.filter((r) => r.correct).length / Math.max(1, outcome.vocabResults.length);
     const fullyCorrect = correctRatio === 1;
     const usedNoHints = outcome.hintsUsed === 0;

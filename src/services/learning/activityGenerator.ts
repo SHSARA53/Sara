@@ -1,6 +1,7 @@
 import type {
   ActivityType,
   GeneratedActivity,
+  LocalizedText,
   MasteryEntry,
   Topic,
   VocabItem,
@@ -23,6 +24,17 @@ function choiceCount(difficulty: 1 | 2 | 3): number {
 interface GenOptions {
   rng?: () => number;
   masteryByVocab?: Record<string, MasteryEntry>;
+}
+
+/**
+ * Vocabulary to draw an activity from. Most topics just use their own list;
+ * a mixed topic like "games" (empty `vocabulary`) draws from every other
+ * topic instead - without this, MATCH/MEMORY/SORT would silently generate
+ * an empty, unplayable activity for it.
+ */
+function vocabPoolFor(topic: Topic): VocabItem[] {
+  if (topic.vocabulary.length > 0) return topic.vocabulary;
+  return topics.filter((topicItem) => topicItem.id !== topic.id).flatMap((topicItem) => topicItem.vocabulary);
 }
 
 function pickFocusVocab(topic: Topic, opts: GenOptions): VocabItem {
@@ -86,8 +98,9 @@ function genCount(topic: Topic, difficulty: 1 | 2 | 3, opts: GenOptions): Genera
 
 function genMatch(topic: Topic, difficulty: 1 | 2 | 3, opts: GenOptions): GeneratedActivity {
   const rng = opts.rng ?? Math.random;
-  const k = Math.min(1 + difficulty, topic.vocabulary.length, 4);
-  const base = sample(topic.vocabulary, k, rng);
+  const pool = vocabPoolFor(topic);
+  const k = Math.min(1 + difficulty, pool.length, 4);
+  const base = sample(pool, k, rng);
 
   const hasColor = base.every((item) => item.color);
   const hasSound = base.every((item) => item.sound);
@@ -144,9 +157,9 @@ function genMatch(topic: Topic, difficulty: 1 | 2 | 3, opts: GenOptions): Genera
 
 function genMemory(topic: Topic, difficulty: 1 | 2 | 3, opts: GenOptions): GeneratedActivity {
   const rng = opts.rng ?? Math.random;
-  const pairCount = Math.min(1 + difficulty, topic.vocabulary.length, 4);
-  const vocabPool = topic.id === "games" ? shuffle(topics.filter((topicItem) => topicItem.id !== "games").flatMap((topicItem) => topicItem.vocabulary), rng) : topic.vocabulary;
-  const base = sample(vocabPool, pairCount, rng);
+  const pool = vocabPoolFor(topic);
+  const pairCount = Math.min(1 + difficulty, pool.length, 4);
+  const base = sample(pool, pairCount, rng);
 
   const cards: VocabItem[] = shuffle(
     base.flatMap((item) => [
@@ -167,26 +180,68 @@ function genMemory(topic: Topic, difficulty: 1 | 2 | 3, opts: GenOptions): Gener
   };
 }
 
+/** Friendly names for the semantic `group` keys used across topics.ts. Anything not listed here falls back to the group's representative item's own label, never to a raw internal key. */
+const GROUP_LABELS: Record<string, LocalizedText> = {
+  warm: t("צבעים חמים", "Warm colors"),
+  cool: t("צבעים קרים", "Cool colors"),
+  fruit: t("פירות", "Fruits"),
+  veg: t("ירקות", "Vegetables"),
+  pet: t("חיות מחמד", "Pets"),
+  farm: t("חיות משק", "Farm animals"),
+  wild: t("חיות בר", "Wild animals"),
+  water: t("יצורי מים", "Water creatures"),
+  road: t("כלי רכב על כביש", "Road vehicles"),
+  air: t("כלי טיס", "Flying vehicles"),
+  rail: t("רכבות", "Trains"),
+  emergency: t("רכבי חירום", "Emergency vehicles"),
+};
+
+function bucketLabel(key: string, representative: VocabItem | undefined): LocalizedText {
+  return GROUP_LABELS[key] ?? representative?.label ?? t(key, key);
+}
+
 function genSort(topic: Topic, difficulty: 1 | 2 | 3, opts: GenOptions): GeneratedActivity {
   const rng = opts.rng ?? Math.random;
+  const pool = vocabPoolFor(topic);
   const byGroup = new Map<string, VocabItem[]>();
-  for (const item of topic.vocabulary) {
+  for (const item of pool) {
     const key = item.group ?? item.color ?? "other";
     if (!byGroup.has(key)) byGroup.set(key, []);
     byGroup.get(key)!.push(item);
   }
-  const groupKeys = sample([...byGroup.keys()].filter((key) => byGroup.get(key)!.length > 0), 2, rng);
-  const [groupA, groupB] = groupKeys.length === 2 ? groupKeys : [groupKeys[0], groupKeys[0]];
+
+  // Prefer groups with at least 2 members so both baskets feel like a real
+  // category rather than "here is the one and only red thing." Only fall
+  // back to thinner groups if the topic's content doesn't offer richer ones.
+  const allKeys = [...byGroup.keys()];
+  const richKeys = allKeys.filter((key) => byGroup.get(key)!.length >= 2);
+  const usableKeys = richKeys.length >= 2 ? richKeys : allKeys;
+  const groupKeys = sample(usableKeys, 2, rng);
 
   const perBucket = Math.min(1 + difficulty, 3);
-  const itemsA = sample(byGroup.get(groupA) ?? [], perBucket, rng).map((item) => ({ ...item, group: groupA }));
-  const itemsB = sample(byGroup.get(groupB) ?? [], perBucket, rng).map((item) => ({ ...item, group: groupB }));
-  const items = shuffle([...itemsA, ...itemsB], rng);
+  let itemsA: VocabItem[];
+  let itemsB: VocabItem[];
+  let groupA: string;
+  let groupB: string;
 
-  const bucketIcon = (key: string): string => {
-    const sample1 = byGroup.get(key)?.[0];
-    return sample1?.emoji ?? "🧺";
-  };
+  if (groupKeys.length === 2) {
+    [groupA, groupB] = groupKeys;
+    itemsA = sample(byGroup.get(groupA) ?? [], perBucket, rng).map((item) => ({ ...item, group: groupA }));
+    itemsB = sample(byGroup.get(groupB) ?? [], perBucket, rng).map((item) => ({ ...item, group: groupB }));
+  } else {
+    // Degenerate content (everything fell into one category, or the topic
+    // only has one item) - split the pool in half so the game still works
+    // instead of rendering an empty or nonsensical activity.
+    groupA = "A";
+    groupB = "B";
+    const shuffled = shuffle(pool, rng);
+    const half = Math.max(1, Math.ceil(Math.min(shuffled.length, perBucket * 2) / 2));
+    itemsA = shuffled.slice(0, half).map((item) => ({ ...item, group: groupA }));
+    itemsB = shuffled.slice(half, half + perBucket).map((item) => ({ ...item, group: groupB }));
+  }
+
+  const items = shuffle([...itemsA, ...itemsB], rng);
+  const representative = (key: string, fallback: VocabItem[]): VocabItem | undefined => byGroup.get(key)?.[0] ?? fallback[0];
 
   return {
     id: nextId("sort"),
@@ -197,8 +252,8 @@ function genSort(topic: Topic, difficulty: 1 | 2 | 3, opts: GenOptions): Generat
     items,
     correctIds: [],
     buckets: [
-      { id: groupA, label: t(groupA, groupA), icon: bucketIcon(groupA) },
-      { id: groupB, label: t(groupB, groupB), icon: bucketIcon(groupB) },
+      { id: groupA, label: bucketLabel(groupA, representative(groupA, itemsA)), icon: itemsA[0]?.emoji ?? "🧺" },
+      { id: groupB, label: bucketLabel(groupB, representative(groupB, itemsB)), icon: itemsB[0]?.emoji ?? "🧺" },
     ],
   };
 }

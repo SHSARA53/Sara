@@ -10,13 +10,16 @@ export const colorsTopic: Topic = {
   ageRange: "2-3",
   activityTypes: ["FIND", "SORT", "MEMORY"],
   vocabulary: [
-    v("red", "אדום", "Red", "🔴", { color: "#FF5A5F", renderAs: "swatch" }),
-    v("blue", "כחול", "Blue", "🔵", { color: "#3B82F6", renderAs: "swatch" }),
-    v("yellow", "צהוב", "Yellow", "🟡", { color: "#FFD93D", renderAs: "swatch" }),
-    v("green", "ירוק", "Green", "🟢", { color: "#4ADE80", renderAs: "swatch" }),
-    v("pink", "ורוד", "Pink", "🩷", { color: "#FF9EB5", renderAs: "swatch" }),
-    v("orange", "כתום", "Orange", "🟠", { color: "#FFA94D", renderAs: "swatch" }),
-    v("purple", "סגול", "Purple", "🟣", { color: "#C4A5FF", renderAs: "swatch" }),
+    // `group` (warm/cool) gives the SORT activity real, multi-item baskets
+    // to sort into - without it every color is its own unique category of
+    // exactly one, which isn't a sorting task at all.
+    v("red", "אדום", "Red", "🔴", { color: "#FF5A5F", renderAs: "swatch", group: "warm" }),
+    v("blue", "כחול", "Blue", "🔵", { color: "#3B82F6", renderAs: "swatch", group: "cool" }),
+    v("yellow", "צהוב", "Yellow", "🟡", { color: "#FFD93D", renderAs: "swatch", group: "warm" }),
+    v("green", "ירוק", "Green", "🟢", { color: "#4ADE80", renderAs: "swatch", group: "cool" }),
+    v("pink", "ורוד", "Pink", "🩷", { color: "#FF9EB5", renderAs: "swatch", group: "warm" }),
+    v("orange", "כתום", "Orange", "🟠", { color: "#FFA94D", renderAs: "swatch", group: "warm" }),
+    v("purple", "סגול", "Purple", "🟣", { color: "#C4A5FF", renderAs: "swatch", group: "cool" }),
   ],
 };
 

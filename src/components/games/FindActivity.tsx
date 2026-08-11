@@ -11,7 +11,7 @@ interface FindActivityProps extends SubActivityProps {
 export function FindActivity({ activity, lang, onResolved }: FindActivityProps) {
   const { tr } = useLang();
   const correctId = activity.correctIds[0];
-  const { wrongId, hinted, selectedId, handleTap } = useChoiceActivity({
+  const { wrongId, hinted, selectedId, locked, handleTap } = useChoiceActivity({
     correctId,
     vocabId: correctId,
     promptText: activity.promptText,
@@ -30,6 +30,7 @@ export function FindActivity({ activity, lang, onResolved }: FindActivityProps) 
             size="lg"
             label={tr(item.label)}
             onClick={() => handleTap(item.id)}
+            disabled={locked}
             selected={selectedId === item.id}
             wrong={wrongId === item.id}
             hinted={hinted && item.id === correctId}

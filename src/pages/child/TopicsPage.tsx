@@ -9,7 +9,10 @@ export function TopicsPage() {
   const { ui } = useLang();
   const navigate = useNavigate();
 
-  const visibleTopics = topics.filter((topic) => state.settings.enabledTopicIds.includes(topic.id));
+  // If a parent has (probably accidentally) disabled every topic, fall back
+  // to showing them all rather than stranding the child on a blank grid.
+  const filtered = topics.filter((topic) => state.settings.enabledTopicIds.includes(topic.id));
+  const visibleTopics = filtered.length > 0 ? filtered : topics;
 
   const startTopic = (topicId: string) => {
     navigate("/session", { state: { topicIds: [topicId], durationMinutes: 7 } });

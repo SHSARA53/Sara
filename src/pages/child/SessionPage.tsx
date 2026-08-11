@@ -13,7 +13,7 @@ import { getTodaysAdventureTopics } from "../../services/learning/dailyAdventure
 import { rewardForActivityResult, rewardForSessionCompletion, mergeRewardBundles, emptyRewardBundle } from "../../services/learning/rewardEngine";
 import { getSticker } from "../../data/stickers";
 import type { ActivityResult, LearningSession, RewardBundle } from "../../models/types";
-import { speak, playEffect } from "../../services/audio/audioService";
+import { speak, playEffect, stopSpeaking } from "../../services/audio/audioService";
 
 interface SessionLocationState {
   topicIds?: string[];
@@ -37,6 +37,7 @@ export function SessionPage() {
   const [session, setSession] = useState<LearningSession | null>(null);
   const [index, setIndex] = useState(0);
   const [sessionRewards, setSessionRewards] = useState<RewardBundle>(emptyRewardBundle());
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const breakShown = useRef(false);
 
   const sessionRef = useRef<LearningSession | null>(null);
@@ -84,6 +85,11 @@ export function SessionPage() {
   const handleActivityComplete = (result: EngineActivityResult) => {
     const currentSession = sessionRef.current!;
     let bundleForActivity = emptyRewardBundle();
+    // Only FIND/COUNT have a genuine right/wrong answer; MATCH/MEMORY/SORT
+    // always resolve as "correct" once solved, so they shouldn't count
+    // toward the accuracy stat parents see on the dashboard.
+    const activityType = currentSession.activities.find((a) => a.id === result.activityId)?.type;
+    const graded = activityType === "FIND" || activityType === "COUNT";
 
     for (const vr of result.vocabResults) {
       recordAnswer(result.topicId, vr.vocabId, vr.correct);
@@ -96,6 +102,7 @@ export function SessionPage() {
         hintsUsed: result.hintsUsed,
         responseTimeMs: result.responseTimeMs,
         timestamp: Date.now(),
+        graded,
       };
       resultsRef.current.push(activityResult);
       bundleForActivity = mergeRewardBundles(bundleForActivity, rewardForActivityResult(activityResult));
@@ -127,17 +134,63 @@ export function SessionPage() {
   const currentActivity = session?.activities[index];
   const earnedSticker = sessionRewards.stickerIds[0] ? getSticker(sessionRewards.stickerIds[0]) : undefined;
 
-  const exitToHome = () => navigate("/");
+  const exitToHome = () => {
+    stopSpeaking();
+    navigate("/");
+  };
+
+  // Mid-activity, a single accidental tap must never silently discard the
+  // session - a toddler brushing this button shouldn't lose the game. Once
+  // there's nothing left to lose (intro screen, or the celebration at the
+  // end), leaving is harmless and skips the confirmation.
+  const handleExitTap = () => {
+    if (phase === "playing" || phase === "break") {
+      stopSpeaking();
+      setShowExitConfirm(true);
+    } else {
+      exitToHome();
+    }
+  };
 
   return (
     <div className="relative mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center px-4 py-8">
       <button
         type="button"
-        onClick={exitToHome}
+        onClick={handleExitTap}
         className="no-select fixed start-4 top-4 z-40 rounded-full bg-white/80 px-4 py-2 text-sm font-bold shadow"
       >
         ✕ {ui("exit")}
       </button>
+
+      <AnimatePresence>
+        {showExitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="flex w-full max-w-sm flex-col items-center gap-4 rounded-[2rem] bg-white p-6 text-center shadow-xl"
+            >
+              <Mascot mood="encouraging" size={90} />
+              <h2 className="text-xl font-extrabold">{ui("exitConfirmTitle")}</h2>
+              <p className="text-sm text-choco/70">{ui("exitConfirmBody")}</p>
+              <div className="flex w-full flex-col gap-3">
+                <BigButton onClick={() => setShowExitConfirm(false)} fullWidth>
+                  {ui("keepPlaying")}
+                </BigButton>
+                <BigButton variant="ghost" onClick={exitToHome} fullWidth>
+                  {ui("leaveAnyway")}
+                </BigButton>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {phase === "playing" && total > 0 && (
         <div className="fixed inset-x-0 top-4 z-30 mx-auto w-full max-w-sm px-16">

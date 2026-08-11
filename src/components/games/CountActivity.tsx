@@ -11,7 +11,7 @@ interface CountActivityProps extends SubActivityProps {
 export function CountActivity({ activity, lang, onResolved }: CountActivityProps) {
   const { tr } = useLang();
   const correctId = activity.correctIds[0];
-  const { wrongId, hinted, selectedId, handleTap } = useChoiceActivity({
+  const { wrongId, hinted, selectedId, locked, handleTap } = useChoiceActivity({
     correctId,
     vocabId: correctId,
     promptText: activity.promptText,
@@ -40,6 +40,7 @@ export function CountActivity({ activity, lang, onResolved }: CountActivityProps
             size="md"
             label={tr(item.label)}
             onClick={() => handleTap(item.id)}
+            disabled={locked}
             selected={selectedId === item.id}
             wrong={wrongId === item.id}
             hinted={hinted && item.id === correctId}

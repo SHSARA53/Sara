@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { accuracyForSessions, groupSessionsByRecency, minutesForSessions, recommendTopics, topicsPracticed } from "./dashboardStats";
-import type { LearningSession } from "../../models/types";
+import {
+  accuracyForSessions,
+  activitiesCompletedForSessions,
+  groupSessionsByRecency,
+  minutesForSessions,
+  recommendTopics,
+  topicsPracticed,
+} from "./dashboardStats";
+import type { ActivityResult, LearningSession } from "../../models/types";
 
 function makeSession(overrides: Partial<LearningSession>): LearningSession {
   return {
@@ -36,14 +43,62 @@ describe("accuracyForSessions", () => {
     expect(accuracyForSessions([makeSession({ results: [] })])).toBe(0);
   });
 
-  it("computes the percentage of correct results", () => {
-    const results = [
-      { activityId: "a", topicId: "colors", vocabId: "red", correct: true, attempts: 1, hintsUsed: 0, responseTimeMs: 1, timestamp: 1 },
-      { activityId: "b", topicId: "colors", vocabId: "blue", correct: false, attempts: 3, hintsUsed: 2, responseTimeMs: 1, timestamp: 2 },
-      { activityId: "c", topicId: "colors", vocabId: "green", correct: true, attempts: 1, hintsUsed: 0, responseTimeMs: 1, timestamp: 3 },
-      { activityId: "d", topicId: "colors", vocabId: "pink", correct: true, attempts: 1, hintsUsed: 0, responseTimeMs: 1, timestamp: 4 },
+  it("computes the percentage of correct graded results", () => {
+    const results: ActivityResult[] = [
+      { activityId: "a", topicId: "colors", vocabId: "red", correct: true, attempts: 1, hintsUsed: 0, responseTimeMs: 1, timestamp: 1, graded: true },
+      { activityId: "b", topicId: "colors", vocabId: "blue", correct: false, attempts: 3, hintsUsed: 2, responseTimeMs: 1, timestamp: 2, graded: true },
+      { activityId: "c", topicId: "colors", vocabId: "green", correct: true, attempts: 1, hintsUsed: 0, responseTimeMs: 1, timestamp: 3, graded: true },
+      { activityId: "d", topicId: "colors", vocabId: "pink", correct: true, attempts: 1, hintsUsed: 0, responseTimeMs: 1, timestamp: 4, graded: true },
     ];
     expect(accuracyForSessions([makeSession({ results })])).toBe(75);
+  });
+
+  it("ignores ungraded results (MATCH/MEMORY/SORT always report correct:true) so they can't inflate accuracy", () => {
+    const results: ActivityResult[] = [
+      { activityId: "a", topicId: "colors", vocabId: "red", correct: true, attempts: 1, hintsUsed: 0, responseTimeMs: 1, timestamp: 1, graded: true },
+      { activityId: "b", topicId: "colors", vocabId: "blue", correct: false, attempts: 3, hintsUsed: 2, responseTimeMs: 1, timestamp: 2, graded: true },
+      // A 4-pair memory game "completing" shouldn't drag a 50% quiz score up to 83%.
+      ...Array.from({ length: 4 }, (_, i) => ({
+        activityId: "memory-1",
+        topicId: "colors",
+        vocabId: `pair-${i}`,
+        correct: true,
+        attempts: 1,
+        hintsUsed: 0,
+        responseTimeMs: 1,
+        timestamp: 10 + i,
+        graded: false,
+      })),
+    ];
+    expect(accuracyForSessions([makeSession({ results })])).toBe(50);
+  });
+
+  it("falls back to all results if nothing graded has been played yet", () => {
+    const results: ActivityResult[] = [
+      { activityId: "memory-1", topicId: "colors", vocabId: "pair-0", correct: true, attempts: 1, hintsUsed: 0, responseTimeMs: 1, timestamp: 1, graded: false },
+    ];
+    expect(accuracyForSessions([makeSession({ results })])).toBe(100);
+  });
+});
+
+describe("activitiesCompletedForSessions", () => {
+  it("counts distinct activities, not one entry per vocab result", () => {
+    const results: ActivityResult[] = [
+      { activityId: "find-1", topicId: "colors", vocabId: "red", correct: true, attempts: 1, hintsUsed: 0, responseTimeMs: 1, timestamp: 1, graded: true },
+      ...Array.from({ length: 4 }, (_, i) => ({
+        activityId: "memory-1",
+        topicId: "colors",
+        vocabId: `pair-${i}`,
+        correct: true,
+        attempts: 1,
+        hintsUsed: 0,
+        responseTimeMs: 1,
+        timestamp: 10 + i,
+        graded: false,
+      })),
+    ];
+    // One FIND activity + one MEMORY activity (with 4 pairs) = 2 activities, not 5.
+    expect(activitiesCompletedForSessions([makeSession({ results })])).toBe(2);
   });
 });
 

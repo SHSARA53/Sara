@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "../../hooks/useLang";
 
 const tabs = [
@@ -9,14 +10,19 @@ const tabs = [
 ];
 
 export function ParentLayout() {
-  const { ui } = useLang();
+  const { ui, dir } = useLang();
   const navigate = useNavigate();
+  // "Back" points toward the start of reading order: right in RTL, left in LTR.
+  const BackIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
 
   return (
     <div className="min-h-screen bg-[#f6f1e9] pb-10">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-white/90 px-4 py-3 shadow-sm backdrop-blur">
-        <button onClick={() => navigate("/")} className="no-select rounded-full bg-cream px-4 py-2 text-sm font-bold">
-          ← {ui("exit")}
+        <button
+          onClick={() => navigate("/")}
+          className="no-select flex items-center gap-1 rounded-full bg-cream px-4 py-2 text-sm font-bold"
+        >
+          <BackIcon size={16} aria-hidden /> {ui("exit")}
         </button>
         <h1 className="text-lg font-extrabold">{ui("parentMode")}</h1>
         <span className="w-16" />

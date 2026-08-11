@@ -69,6 +69,16 @@ export const uiStrings = {
   minutes: { he: "דקות", en: "min" },
   enableTopic: { he: "הפעלת נושא", en: "Enable topic" },
   installApp: { he: "התקינו את האפליקציה", en: "Install App" },
+  reducedMotion: { he: "תנועה מופחתת", en: "Reduced motion" },
+  sessionDuration: { he: "משך הפעילות", en: "Session duration" },
+  difficultyLevel: { he: "רמת קושי", en: "Difficulty level" },
+  exitConfirmTitle: { he: "לצאת עכשיו?", en: "Leave now?" },
+  exitConfirmBody: {
+    he: "מה שלמדתם כבר נשמר! נוכל להמשיך את ההרפתקה בפעם הבאה.",
+    en: "What you've learned is already saved! We can pick the adventure back up next time.",
+  },
+  keepPlaying: { he: "נשארים לשחק", en: "Keep playing" },
+  leaveAnyway: { he: "כן, לצאת", en: "Yes, leave" },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type UiStringKey = keyof typeof uiStrings;

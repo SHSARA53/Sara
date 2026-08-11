@@ -11,6 +11,12 @@ interface ParentGateButtonProps {
  * A deliberately small, low-contrast icon (never a big obvious "Parent Mode"
  * button) tucked in a corner. A toddler brushing past it does nothing; only
  * a sustained 3-second press unlocks parent mode.
+ *
+ * Positioned top-start by default: the bottom nav (and its Rewards tab) and
+ * the reward counters both live near the bottom/top-end corners of child
+ * screens, so top-start is the one spot that's reliably clear of other
+ * tappable content and won't get brushed by a child reaching for something
+ * else.
  */
 export function ParentGateButton({ onUnlock }: ParentGateButtonProps) {
   const [progress, setProgress] = useState(0);
@@ -52,7 +58,7 @@ export function ParentGateButton({ onUnlock }: ParentGateButtonProps) {
       onPointerUp={clear}
       onPointerLeave={clear}
       onPointerCancel={clear}
-      className="no-select fixed bottom-3 opacity-40 hover:opacity-70 end-3 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-white/60"
+      className="no-select safe-area-top fixed top-3 start-3 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-white/60 opacity-40 hover:opacity-70"
     >
       <svg viewBox="0 0 40 40" className="absolute h-11 w-11 -rotate-90">
         <circle cx="20" cy="20" r="16" fill="none" stroke="#e8ddce" strokeWidth="3" />

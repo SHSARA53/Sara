@@ -24,9 +24,15 @@ export function useChoiceActivity({ correctId, vocabId, promptText, lang, onReso
   const [hinted, setHinted] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [resolved, setResolved] = useState(false);
+  const [locked, setLocked] = useState(false);
   const attemptsRef = useRef(0);
   const hintsRef = useRef(0);
   const startRef = useRef(Date.now());
+  // Mirrors `resolved`/`locked` state but updates synchronously, so a fast
+  // second tap during the ~0.5-1.1s pause before `finish()` actually fires
+  // (very common - toddlers tap eagerly) can't sneak past the React state
+  // update and record a second attempt, or worse, resolve the activity twice.
+  const lockedRef = useRef(false);
 
   useEffect(() => {
     startRef.current = Date.now();
@@ -34,6 +40,8 @@ export function useChoiceActivity({ correctId, vocabId, promptText, lang, onReso
     setHinted(false);
     setSelectedId(null);
     setResolved(false);
+    setLocked(false);
+    lockedRef.current = false;
     attemptsRef.current = 0;
     hintsRef.current = 0;
     const timer = setTimeout(() => speak(promptText, lang), 350);
@@ -51,10 +59,12 @@ export function useChoiceActivity({ correctId, vocabId, promptText, lang, onReso
   };
 
   const handleTap = (id: string) => {
-    if (resolved) return;
+    if (lockedRef.current) return;
     attemptsRef.current += 1;
 
     if (id === correctId) {
+      lockedRef.current = true;
+      setLocked(true);
       setSelectedId(id);
       playEffect("success");
       setTimeout(() => finish(true), 500);
@@ -73,6 +83,8 @@ export function useChoiceActivity({ correctId, vocabId, promptText, lang, onReso
       setHinted(true);
       playEffect("hint");
     } else if (attemptsRef.current >= MAX_ATTEMPTS_BEFORE_REVEAL) {
+      lockedRef.current = true;
+      setLocked(true);
       hintsRef.current += 1;
       setHinted(true);
       setSelectedId(correctId);
@@ -80,5 +92,5 @@ export function useChoiceActivity({ correctId, vocabId, promptText, lang, onReso
     }
   };
 
-  return { wrongId, hinted, selectedId, resolved, handleTap };
+  return { wrongId, hinted, selectedId, resolved, locked, handleTap };
 }

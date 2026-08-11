@@ -12,6 +12,7 @@ const baseResult: ActivityResult = {
   hintsUsed: 0,
   responseTimeMs: 1200,
   timestamp: 0,
+  graded: true,
 };
 
 describe("rewardForActivityResult", () => {

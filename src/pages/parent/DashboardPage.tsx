@@ -7,6 +7,7 @@ import {
   sessionsForToday,
   minutesForSessions,
   accuracyForSessions,
+  activitiesCompletedForSessions,
   groupSessionsByRecency,
   recommendTopics,
 } from "../../services/learning/dashboardStats";
@@ -53,7 +54,7 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-3 gap-3">
         <StatCard label={ui("todaysLearningTime")} value={`${minutesToday} ${ui("minutes")}`} />
-        <StatCard label={ui("activitiesCompleted")} value={String(todaySessions.reduce((sum, s) => sum + s.results.length, 0))} />
+        <StatCard label={ui("activitiesCompleted")} value={String(activitiesCompletedForSessions(todaySessions))} />
         <StatCard label={ui("accuracy")} value={`${accuracyToday}%`} />
       </div>
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateActivity } from "./activityGenerator";
-import { colorsTopic, animalsTopic, foodTopic, numbersTopic, shapesTopic } from "../../data/topics/topics";
+import { colorsTopic, animalsTopic, foodTopic, numbersTopic, shapesTopic, gamesTopic, vehiclesTopic } from "../../data/topics/topics";
 import { createRng } from "../../utils/rng";
 
 describe("generateActivity FIND", () => {
@@ -75,5 +75,51 @@ describe("generateActivity SORT", () => {
     for (const item of activity.items) {
       expect(bucketIds).toContain(item.group);
     }
+  });
+
+  it("gives colors a real sorting task (warm/cool groups with more than one item each), not one item per bucket", () => {
+    for (let seed = 0; seed < 15; seed++) {
+      const activity = generateActivity(colorsTopic, "SORT", 2, { rng: createRng(seed) });
+      expect(activity.items.length).toBeGreaterThan(2);
+    }
+  });
+
+  it("never leaks a raw internal key (hex color, group id) as a bucket label", () => {
+    for (const topic of [colorsTopic, foodTopic, animalsTopic, vehiclesTopic]) {
+      for (let seed = 0; seed < 10; seed++) {
+        const activity = generateActivity(topic, "SORT", 2, { rng: createRng(seed) });
+        for (const bucket of activity.buckets!) {
+          expect(bucket.label.he).not.toMatch(/^#[0-9A-Fa-f]{3,6}$/);
+          expect(bucket.label.en).not.toMatch(/^#[0-9A-Fa-f]{3,6}$/);
+          expect(bucket.label.he.length).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it("never produces an empty SORT for a mixed topic with no vocabulary of its own (the 'games' topic)", () => {
+    for (let seed = 0; seed < 10; seed++) {
+      const activity = generateActivity(gamesTopic, "SORT", 2, { rng: createRng(seed) });
+      expect(activity.items.length).toBeGreaterThan(0);
+      expect(activity.buckets).toHaveLength(2);
+      expect(activity.buckets![0].id).not.toBe(activity.buckets![1].id);
+    }
+  });
+});
+
+describe("generateActivity MATCH on a mixed topic (no vocabulary of its own)", () => {
+  it("draws from every other topic instead of generating an empty match", () => {
+    for (let seed = 0; seed < 10; seed++) {
+      const activity = generateActivity(gamesTopic, "MATCH", 2, { rng: createRng(seed) });
+      expect(activity.items.length).toBeGreaterThan(0);
+      expect(activity.matchRightItems!.length).toBe(activity.items.length);
+    }
+  });
+});
+
+describe("generateActivity MEMORY on a mixed topic (no vocabulary of its own)", () => {
+  it("draws from every other topic instead of generating an empty memory game", () => {
+    const activity = generateActivity(gamesTopic, "MEMORY", 2, { rng: createRng(1) });
+    expect(activity.items.length).toBeGreaterThan(0);
   });
 });

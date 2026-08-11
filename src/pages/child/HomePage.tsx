@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Mascot } from "../../components/mascot/Mascot";
 import { BigButton } from "../../components/common/BigButton";
 import { RewardCounters } from "../../components/common/RewardCounters";
@@ -13,13 +14,18 @@ import { welcomePhrases } from "../../locales/phrases";
 
 export function HomePage() {
   const { state } = useAppState();
-  const { tr, ui, lang } = useLang();
+  const { tr, ui, lang, dir } = useLang();
   const navigate = useNavigate();
+  // "Forward" points away from the start of reading order: left in RTL, right in LTR.
+  const ForwardIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
 
-  const adventureTopicIds = useMemo(
-    () => getTodaysAdventureTopics(state.profile?.createdAt ?? Date.now()).filter((id) => state.settings.enabledTopicIds.includes(id)),
-    [state.profile?.createdAt, state.settings.enabledTopicIds],
-  );
+  const adventureTopicIds = useMemo(() => {
+    const todays = getTodaysAdventureTopics(state.profile?.createdAt ?? Date.now());
+    const enabled = todays.filter((id) => state.settings.enabledTopicIds.includes(id));
+    // Same fail-safe as TopicsPage: never show an empty adventure card just
+    // because every topic happens to be disabled today.
+    return enabled.length > 0 ? enabled : todays;
+  }, [state.profile?.createdAt, state.settings.enabledTopicIds]);
   const adventureDay = getAdventureDayLabel(state.profile?.createdAt ?? Date.now());
   const adventureTopics = adventureTopicIds.map((id) => getTopic(id)).filter(Boolean);
 
@@ -72,9 +78,9 @@ export function HomePage() {
       <button
         type="button"
         onClick={() => navigate("/topics")}
-        className="no-select text-sm font-bold text-choco/60 underline"
+        className="no-select flex items-center gap-1 text-sm font-bold text-choco/60 underline"
       >
-        {ui("topics")} →
+        {ui("topics")} <ForwardIcon size={14} aria-hidden />
       </button>
     </div>
   );

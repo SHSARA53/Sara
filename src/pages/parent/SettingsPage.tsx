@@ -85,7 +85,7 @@ export function SettingsPage() {
             />
           </div>
           <ToggleRow
-            label="Reduced motion"
+            label={ui("reducedMotion")}
             checked={state.settings.reducedMotion}
             onChange={(v) => updateSettings({ reducedMotion: v })}
           />

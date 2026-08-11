@@ -25,8 +25,10 @@ export function LearningPlanPage() {
   };
 
   const start = (topicIds: string[]) => {
+    if (topicIds.length === 0 && enabledTopics.length === 0) return; // nothing to build a session from
+    const resolvedTopicIds = topicIds.length ? topicIds : [pick(enabledTopics).id];
     navigate("/session", {
-      state: { topicIds: topicIds.length ? topicIds : [pick(enabledTopics).id], durationMinutes: duration, difficultyOverride: difficultyLevel[difficulty] },
+      state: { topicIds: resolvedTopicIds, durationMinutes: duration, difficultyOverride: difficultyLevel[difficulty] },
     });
   };
 
@@ -53,7 +55,7 @@ export function LearningPlanPage() {
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-bold text-choco/60">{ui("learningPlan")}</p>
+        <p className="mb-2 text-sm font-bold text-choco/60">{ui("sessionDuration")}</p>
         <div className="flex gap-2">
           {durations.map((d) => (
             <button
@@ -68,7 +70,7 @@ export function LearningPlanPage() {
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-bold text-choco/60">{ui("difficultyEasy")}</p>
+        <p className="mb-2 text-sm font-bold text-choco/60">{ui("difficultyLevel")}</p>
         <div className="flex gap-2">
           {(["easy", "normal", "challenge"] as Difficulty[]).map((d) => (
             <button
@@ -86,7 +88,7 @@ export function LearningPlanPage() {
         <BigButton onClick={() => start(selected)} disabled={selected.length === 0} fullWidth>
           {ui("startPlan")}
         </BigButton>
-        <BigButton variant="ghost" onClick={() => start([])} fullWidth>
+        <BigButton variant="ghost" onClick={() => start([])} disabled={enabledTopics.length === 0} fullWidth>
           {ui("surpriseMe")}
         </BigButton>
       </div>
