@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
-import type { AppState, ChildProfile, InProgressSession, LearningSession, RewardBundle } from "../models/types";
+import type { AppState, ChildProfile, InProgressSession, LearningGoal, LearningSession, RewardBundle } from "../models/types";
 import { appReducer, type AppAction } from "./appReducer";
 import { createDefaultState } from "../services/storage/defaults";
 import { storage } from "../services/storage/storageAdapter";
@@ -19,6 +19,7 @@ interface AppStateContextValue {
   setInProgressSession: (value: InProgressSession | null) => void;
   celebrateWorld: (worldId: string) => void;
   celebrateFirstActivity: () => void;
+  setGoal: (goal: LearningGoal | null) => void;
   resetProgress: () => void;
   dispatch: (action: AppAction) => void;
 }
@@ -77,6 +78,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setInProgressSession: (value) => dispatch({ type: "SET_IN_PROGRESS_SESSION", value }),
       celebrateWorld: (worldId) => dispatch({ type: "CELEBRATE_WORLD", worldId }),
       celebrateFirstActivity: () => dispatch({ type: "CELEBRATE_FIRST_ACTIVITY" }),
+      setGoal: (goal) => dispatch({ type: "SET_GOAL", goal }),
       resetProgress: () => dispatch({ type: "RESET_PROGRESS" }),
       dispatch,
     }),

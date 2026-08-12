@@ -132,3 +132,25 @@ describe("appReducer RESET_PROGRESS", () => {
     expect(state.profile?.name).toBe("Noa");
   });
 });
+
+describe("appReducer SET_GOAL", () => {
+  it("sets a parent-chosen learning goal", () => {
+    let state = createDefaultState();
+    state = appReducer(state, { type: "SET_GOAL", goal: { topicId: "animals", setAt: 123 } });
+    expect(state.currentGoal).toEqual({ topicId: "animals", setAt: 123 });
+  });
+
+  it("can be cleared by setting it to null", () => {
+    let state = createDefaultState();
+    state = appReducer(state, { type: "SET_GOAL", goal: { topicId: "animals", setAt: 123 } });
+    state = appReducer(state, { type: "SET_GOAL", goal: null });
+    expect(state.currentGoal).toBeNull();
+  });
+
+  it("RESET_PROGRESS also clears any active learning goal", () => {
+    let state = createDefaultState();
+    state = appReducer(state, { type: "SET_GOAL", goal: { topicId: "animals", setAt: 123 } });
+    state = appReducer(state, { type: "RESET_PROGRESS" });
+    expect(state.currentGoal).toBeNull();
+  });
+});

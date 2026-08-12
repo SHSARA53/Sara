@@ -26,6 +26,8 @@ interface GenOptions {
   masteryByVocab?: Record<string, MasteryEntry>;
   /** FIND only: force the correct answer to a specific vocab id instead of picking one - used by story scenes ("help Bunny find the RED balloon" must actually generate a find-red activity). */
   forcedVocabId?: string;
+  /** COUNT only: which topic to draw the counted objects from, when it should be different from the topic being scored (e.g. a Number Town skill counted using Animal Forest's ducks) - genuine cross-domain practice reusing the same engine. Defaults to the activity's own topic. */
+  countContextTopicId?: string;
 }
 
 /**
@@ -81,7 +83,9 @@ function genCount(topic: Topic, difficulty: 1 | 2 | 3, opts: GenOptions): Genera
   const numbersTopic = topics.find((topicItem) => topicItem.id === "numbers")!;
   const maxN = Math.min(5, 2 + difficulty);
   const target = Math.floor(rng() * maxN) + 1;
-  const objectVocab = topic.id === "numbers" ? pick(topics.find((topicItem) => topicItem.id === "animals")!.vocabulary, rng) : pick(topic.vocabulary, rng);
+  const contextTopic = opts.countContextTopicId ? topics.find((topicItem) => topicItem.id === opts.countContextTopicId) : undefined;
+  const objectPool = contextTopic?.vocabulary ?? (topic.id === "numbers" ? topics.find((topicItem) => topicItem.id === "animals")!.vocabulary : topic.vocabulary);
+  const objectVocab = pick(objectPool, rng);
 
   const n = Math.min(choiceCount(difficulty), numbersTopic.vocabulary.length);
   const correctNumber = numbersTopic.vocabulary.find((item) => item.value === target)!;

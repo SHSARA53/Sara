@@ -36,5 +36,6 @@ export function createDefaultState(): AppState {
     sessions: [],
     onboardingComplete: false,
     inProgressSession: null,
+    currentGoal: null,
   };
 }

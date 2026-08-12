@@ -9,7 +9,7 @@ import { ActivityEngine, type EngineActivityResult } from "../../components/game
 import { useAppState } from "../../state/AppStateContext";
 import { useLang } from "../../hooks/useLang";
 import { buildSession } from "../../services/learning/sessionGenerator";
-import { getTodaysAdventureTopics } from "../../services/learning/dailyAdventure";
+import { buildAdventurePlan, buildAdaptiveSession, planTopicIds, type AdventurePlanSlot } from "../../services/learning/dailyAdventureEngine";
 import { rewardForActivityResult, rewardForSessionCompletion, mergeRewardBundles, emptyRewardBundle } from "../../services/learning/rewardEngine";
 import { getSticker } from "../../data/stickers";
 import { getWorld, getWorldByTopicId } from "../../data/worlds/worlds";
@@ -22,6 +22,8 @@ interface SessionLocationState {
   difficultyOverride?: 1 | 2 | 3;
   worldId?: string;
   resume?: boolean;
+  /** Pre-built by HomePage's adaptive Today's Adventure, so what's shown and what's played always match exactly. */
+  adventurePlan?: AdventurePlanSlot[];
 }
 
 type Phase = "intro" | "playing" | "break" | "chest" | "reveal" | "worldCelebration" | "complete";
@@ -35,8 +37,30 @@ export function SessionPage() {
 
   const locState = (location.state as SessionLocationState) ?? {};
   const isResume = Boolean(locState.resume && state.inProgressSession);
-  const topicIds = locState.topicIds?.length ? locState.topicIds : getTodaysAdventureTopics(state.profile?.createdAt ?? Date.now());
   const durationMinutes = locState.durationMinutes ?? 8;
+
+  // Explicit topics (parent plan, "Explore this world", a story) always win.
+  // With nothing explicit and nothing to resume, fall back to building an
+  // adaptive plan right here - covers direct/bookmarked navigation to
+  // /session, though the normal path is HomePage building the plan once and
+  // handing it over via adventurePlan so what's previewed and what's played
+  // are guaranteed to be the same session.
+  const adventurePlan =
+    locState.adventurePlan ??
+    (!locState.topicIds?.length && !isResume
+      ? buildAdventurePlan({
+          enabledTopicIds: state.settings.enabledTopicIds,
+          progress: state.progress,
+          recentTopicIds: [...state.sessions]
+            .sort((a, b) => b.startedAt - a.startedAt)
+            .slice(0, 5)
+            .flatMap((s) => s.topicIds)
+            .filter((id, i, arr) => arr.indexOf(id) === i),
+          durationMinutes,
+        })
+      : null);
+
+  const topicIds = locState.topicIds?.length ? locState.topicIds : adventurePlan ? planTopicIds(adventurePlan) : ["colors"];
   const world = locState.worldId ? getWorld(locState.worldId) : topicIds.length === 1 ? getWorldByTopicId(topicIds[0]) : undefined;
 
   const [phase, setPhase] = useState<Phase>(isResume ? "playing" : "intro");
@@ -62,12 +86,14 @@ export function SessionPage() {
     // exploration target (only meaningful for a single-world session).
     priorExploredRef.current = topicIds.length === 1 ? (state.progress[topicIds[0]]?.activitiesCompleted ?? 0) : 0;
 
-    const built = buildSession({
-      topicIds,
-      durationMinutes,
-      progressByTopic: state.progress,
-      difficultyOverride: locState.difficultyOverride,
-    });
+    const built = adventurePlan
+      ? buildAdaptiveSession(adventurePlan, state.progress, locState.difficultyOverride)
+      : buildSession({
+          topicIds,
+          durationMinutes,
+          progressByTopic: state.progress,
+          difficultyOverride: locState.difficultyOverride,
+        });
     sessionRef.current = built;
     setSession(built);
     setIndex(0);

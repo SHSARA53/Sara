@@ -217,6 +217,50 @@ export interface Story {
   scenes: StoryScene[];
 }
 
+// ---------------------------------------------------------------------------
+// Curriculum layer: a lightweight, transparent, rule-based model sitting on
+// top of the existing per-vocab MasteryEntry data (see TopicProgress) - it
+// adds structure (domains, prerequisites, curriculum sequencing) without any
+// new persisted state of its own. A Skill is just a named, categorized
+// pointer at one (topicId, vocabId) pair; its "state" is always *derived*
+// from the mastery data that already exists, never stored separately, so
+// there is nothing to migrate and nothing that can drift out of sync.
+// ---------------------------------------------------------------------------
+
+/** Broad developmental areas used to group skills for the parent dashboard. Motor/interaction skills aren't a separate domain here - they're expressed through the SORT/MATCH/MEMORY activity types, which already cut across every topic. */
+export type Domain = "language" | "cognitive" | "early_math" | "colors" | "shapes" | "nature" | "social_emotional";
+
+/**
+ * Describes interaction with the app, never a developmental diagnosis.
+ * NOT_INTRODUCED: never attempted. INTRODUCED: just started (1-2 attempts).
+ * PRACTICING: attempted several times, still low mastery. EMERGING: mastery
+ * building. STRONG: consistently mastered. REVIEW: due for a spaced
+ * refresher regardless of how strong it once was - never "forgotten",
+ * never removed, just resurfaced.
+ */
+export type SkillState = "NOT_INTRODUCED" | "INTRODUCED" | "PRACTICING" | "EMERGING" | "STRONG" | "REVIEW";
+
+/** Internal curriculum buckets for sequencing - never shown to the child as an academic grade. */
+export type CurriculumLevel = "explorer" | "little_discoverer" | "curious_explorer";
+
+export interface Skill {
+  id: string;
+  topicId: string;
+  vocabId: string;
+  domain: Domain;
+  title: LocalizedText;
+  ageRange: string;
+  /** Skill ids that should already be comfortable before this one is introduced. */
+  prerequisites: string[];
+  curriculumLevel: CurriculumLevel;
+}
+
+/** A parent-set focus, never a checklist - completing it is just a gentle acknowledgment. */
+export interface LearningGoal {
+  topicId: string;
+  setAt: number;
+}
+
 export type Difficulty = "easy" | "normal" | "challenge";
 
 export interface LearningPlan {
@@ -256,4 +300,5 @@ export interface AppState {
   sessions: LearningSession[];
   onboardingComplete: boolean;
   inProgressSession: InProgressSession | null;
+  currentGoal: LearningGoal | null;
 }

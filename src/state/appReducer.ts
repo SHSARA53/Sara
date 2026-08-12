@@ -3,6 +3,7 @@ import type {
   AppState,
   ChildProfile,
   InProgressSession,
+  LearningGoal,
   LearningSession,
   RewardBundle,
 } from "../models/types";
@@ -22,6 +23,7 @@ export type AppAction =
   | { type: "SET_IN_PROGRESS_SESSION"; value: InProgressSession | null }
   | { type: "CELEBRATE_WORLD"; worldId: string }
   | { type: "CELEBRATE_FIRST_ACTIVITY" }
+  | { type: "SET_GOAL"; goal: LearningGoal | null }
   | { type: "RESET_PROGRESS" };
 
 const MAX_STORED_SESSIONS = 120;
@@ -122,12 +124,16 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       if (state.rewards.hasCelebratedFirstActivity) return state;
       return { ...state, rewards: { ...state.rewards, hasCelebratedFirstActivity: true } };
 
+    case "SET_GOAL":
+      return { ...state, currentGoal: action.goal };
+
     case "RESET_PROGRESS":
       return {
         ...state,
         progress: {},
         sessions: [],
         inProgressSession: null,
+        currentGoal: null,
         rewards: {
           stars: 0,
           hearts: 0,
