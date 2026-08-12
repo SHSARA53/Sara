@@ -11,6 +11,7 @@ import { FeedbackBanner } from "./FeedbackBanner";
 import { Confetti } from "../common/Confetti";
 import { Mascot, type MascotMood } from "../mascot/Mascot";
 import { useLang } from "../../hooks/useLang";
+import { useAppState } from "../../state/AppStateContext";
 import { speak, stopSpeaking } from "../../services/audio/audioService";
 import { successPhrases, encouragePhrases, revealPhrases } from "../../locales/phrases";
 import { pick } from "../../utils/rng";
@@ -28,6 +29,7 @@ interface ActivityEngineProps {
 
 export function ActivityEngine({ activity, onComplete }: ActivityEngineProps) {
   const { lang } = useLang();
+  const { state } = useAppState();
   const [feedback, setFeedback] = useState<{ kind: "success" | "encourage" | "reveal"; text: LocalizedText } | null>(null);
   const [mascotMood, setMascotMood] = useState<MascotMood>("idle");
   const [showConfetti, setShowConfetti] = useState(false);
@@ -63,7 +65,7 @@ export function ActivityEngine({ activity, onComplete }: ActivityEngineProps) {
 
     setFeedback({ kind, text: phrase });
     setMascotMood(fullyCorrect ? "celebrating" : kind === "encourage" ? "encouraging" : "idle");
-    if (fullyCorrect && usedNoHints) setShowConfetti(true);
+    if (fullyCorrect && usedNoHints && !state.settings.calmMode) setShowConfetti(true);
     speak(phrase, lang);
 
     const responseTimeMs = Date.now() - startRef.current;

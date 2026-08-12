@@ -187,6 +187,46 @@ export const oppositesTopic: Topic = {
   ],
 };
 
+export const natureTopic: Topic = {
+  id: "nature",
+  title: t("טבע", "Nature"),
+  description: t("שמש, עננים ופרפרים!", "Sun, clouds and butterflies!"),
+  icon: "🌳",
+  theme: "mint",
+  ageRange: "2-3",
+  activityTypes: ["FIND", "MATCH", "MEMORY", "SORT"],
+  vocabulary: [
+    v("sun", "שמש", "Sun", "☀️", { group: "sky" }),
+    v("moon", "ירח", "Moon", "🌙", { group: "sky" }),
+    v("cloud", "ענן", "Cloud", "☁️", { group: "sky" }),
+    v("rain", "גשם", "Rain", "🌧️", { group: "sky" }),
+    v("tree", "עץ", "Tree", "🌳", { group: "earth" }),
+    v("flower", "פרח", "Flower", "🌸", { group: "earth" }),
+    v("water", "מים", "Water", "💧", { group: "earth" }),
+    v("grass", "דשא", "Grass", "🌱", { group: "earth" }),
+    v("bird", "ציפור", "Bird", "🐦", { sound: t("צייוץ!", "Tweet!"), group: "earth" }),
+    v("butterfly", "פרפר", "Butterfly", "🦋", { group: "earth" }),
+  ],
+};
+
+export const soundsTopic: Topic = {
+  id: "sounds",
+  title: t("צלילים ומוזיקה", "Sounds & Music"),
+  description: t("איזה כלי עושה בּוּם בּוּם?", "Which instrument goes boom boom?"),
+  icon: "🎵",
+  theme: "lilac",
+  ageRange: "2-3",
+  activityTypes: ["FIND", "MATCH", "MEMORY"],
+  vocabulary: [
+    v("drum", "תוף", "Drum", "🥁", { sound: t("בּוּם בּוּם!", "Boom boom!") }),
+    v("bell", "פעמון", "Bell", "🔔", { sound: t("צִלְצוּל!", "Ring ring!") }),
+    v("piano", "פסנתר", "Piano", "🎹", { sound: t("טינג טונג!", "Ting tong!") }),
+    v("guitar", "גיטרה", "Guitar", "🎸", { sound: t("טרררם!", "Strum!") }),
+    v("trumpet", "חצוצרה", "Trumpet", "🎺", { sound: t("פאא פאא!", "Toot toot!") }),
+    v("saxophone", "סקסופון", "Saxophone", "🎷", { sound: t("דוווו!", "Toooot!") }),
+  ],
+};
+
 /** A mixed "games" topic that pulls from every other topic for memory/sort mini-games. */
 export const gamesTopic: Topic = {
   id: "games",
@@ -209,6 +249,8 @@ export const topics: Topic[] = [
   bodyTopic,
   emotionsTopic,
   oppositesTopic,
+  natureTopic,
+  soundsTopic,
   gamesTopic,
 ];
 

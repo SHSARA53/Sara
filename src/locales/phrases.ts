@@ -6,6 +6,19 @@ export const successPhrases: LocalizedText[] = [
   { he: "מעולה! אתם כוכבים!", en: "Awesome! You're a star!" },
   { he: "נכון מאוד!", en: "That's right!" },
   { he: "איזה כיף, הצלחתם!", en: "So much fun, you did it!" },
+  { he: "הופ! בול פגיעה!", en: "Whoosh! Right on target!" },
+  { he: "וואו, אתם ממש חכמים!", en: "Wow, you're so clever!" },
+];
+
+/** Used when the mascot is genuinely curious / inviting exploration - entering a world, starting an adventure. */
+export const curiousPhrases: LocalizedText[] = [
+  { he: "אני סקרן... בואו נגלה ביחד!", en: "I'm curious... let's discover it together!" },
+  { he: "מה מסתתר כאן?", en: "What's hiding here?" },
+  { he: "בואו נחקור!", en: "Let's explore!" },
+];
+
+export const surprisePhrases: LocalizedText[] = [
+  { he: "יש לי הפתעה בשבילכם!", en: "I have a surprise for you!" },
 ];
 
 export const encouragePhrases: LocalizedText[] = [

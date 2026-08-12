@@ -22,3 +22,15 @@ export function updateStreak(
 
   return { streak: isConsecutive ? previousStreak + 1 : 1, day: today };
 }
+
+/**
+ * True once there's been more than a one-day gap since the last session -
+ * the cue for a warm "I missed you!" welcome instead of the usual greeting.
+ * Never used to say anything like "you missed N days."
+ */
+export function isReturningAfterGap(lastSessionDay: string | undefined, now: Date = new Date()): boolean {
+  if (!lastSessionDay) return false;
+  const today = toDayString(now);
+  const yesterday = toDayString(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+  return lastSessionDay !== today && lastSessionDay !== yesterday;
+}

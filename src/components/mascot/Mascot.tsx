@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
+import type { MascotMood } from "../../models/types";
 
-export type MascotMood = "idle" | "happy" | "celebrating" | "thinking" | "sleepy" | "encouraging";
+export type { MascotMood };
 
 interface MascotProps {
   mood?: MascotMood;
@@ -9,6 +10,7 @@ interface MascotProps {
 }
 
 const bounceTransition = { duration: 2.2, repeat: Infinity, ease: "easeInOut" as const };
+const excitedTransition = { duration: 0.7, repeat: Infinity, ease: "easeInOut" as const };
 
 /**
  * Bunny the mascot - the single consistent character used throughout the app.
@@ -16,15 +18,24 @@ const bounceTransition = { duration: 2.2, repeat: Infinity, ease: "easeInOut" as
  * and can react instantly to mood changes without loading a new file.
  */
 export function Mascot({ mood = "idle", size = 140, className = "" }: MascotProps) {
-  const eyes = mood === "happy" || mood === "celebrating" ? "closed-happy" : mood === "sleepy" ? "closed-sleepy" : "open";
+  const eyes =
+    mood === "happy" || mood === "celebrating"
+      ? "closed-happy"
+      : mood === "sleepy"
+        ? "closed-sleepy"
+        : mood === "excited"
+          ? "wide"
+          : "open";
   const mouthPath =
     mood === "celebrating" || mood === "happy"
       ? "M62 118 Q90 145 118 118"
-      : mood === "sleepy"
-        ? "M75 122 Q90 126 105 122"
-        : mood === "thinking"
-          ? "M70 122 Q90 116 110 122"
-          : "M70 118 Q90 135 110 118";
+      : mood === "excited"
+        ? "M68 116 Q90 142 112 116 Q90 128 68 116"
+        : mood === "sleepy"
+          ? "M75 122 Q90 126 105 122"
+          : mood === "thinking"
+            ? "M70 122 Q90 116 110 122"
+            : "M70 118 Q90 135 110 118";
 
   return (
     <motion.div
@@ -32,19 +43,43 @@ export function Mascot({ mood = "idle", size = 140, className = "" }: MascotProp
       animate={
         mood === "celebrating"
           ? { rotate: [0, -8, 8, -6, 6, 0], y: [0, -14, 0, -10, 0] }
-          : mood === "idle" || mood === "encouraging"
-            ? { y: [0, -8, 0] }
-            : {}
+          : mood === "excited"
+            ? { y: [0, -12, 0], scale: [1, 1.06, 1] }
+            : mood === "idle" || mood === "encouraging"
+              ? { y: [0, -8, 0] }
+              : {}
       }
-      transition={mood === "celebrating" ? { duration: 0.9 } : bounceTransition}
-      style={{ width: size, height: size }}
+      transition={mood === "celebrating" ? { duration: 0.9 } : mood === "excited" ? excitedTransition : bounceTransition}
+      style={{ width: size, height: size, position: "relative" }}
     >
+      {mood === "excited" && (
+        <>
+          <motion.span
+            className="absolute text-xl"
+            style={{ top: "-4%", left: "-8%" }}
+            animate={{ opacity: [0, 1, 0], scale: [0.6, 1, 0.6], rotate: [0, 20, 0] }}
+            transition={{ duration: 1.1, repeat: Infinity }}
+            aria-hidden
+          >
+            ✨
+          </motion.span>
+          <motion.span
+            className="absolute text-lg"
+            style={{ top: "6%", right: "-6%" }}
+            animate={{ opacity: [0, 1, 0], scale: [0.6, 1, 0.6] }}
+            transition={{ duration: 1.1, repeat: Infinity, delay: 0.4 }}
+            aria-hidden
+          >
+            ✨
+          </motion.span>
+        </>
+      )}
       <svg viewBox="0 0 180 190" width={size} height={size} role="img" aria-label="Bunny mascot">
         {/* ears */}
         <motion.ellipse
           cx="62" cy="42" rx="20" ry="52" fill="#FFFFFF" stroke="#FFD9E8" strokeWidth="4"
-          animate={mood === "celebrating" ? { rotate: [-4, 6, -4] } : {}}
-          transition={{ duration: 0.6, repeat: mood === "celebrating" ? Infinity : 0 }}
+          animate={mood === "celebrating" || mood === "excited" ? { rotate: [-4, 6, -4] } : {}}
+          transition={{ duration: 0.6, repeat: mood === "celebrating" || mood === "excited" ? Infinity : 0 }}
           style={{ transformOrigin: "62px 90px" }}
         />
         <ellipse cx="118" cy="42" rx="20" ry="52" fill="#FFFFFF" stroke="#FFD9E8" strokeWidth="4" />
@@ -65,6 +100,14 @@ export function Mascot({ mood = "idle", size = 140, className = "" }: MascotProp
             <circle cx="110" cy="108" r="7" fill="#5B4636" />
             <circle cx="72.5" cy="105.5" r="2" fill="#fff" />
             <circle cx="112.5" cy="105.5" r="2" fill="#fff" />
+          </>
+        )}
+        {eyes === "wide" && (
+          <>
+            <circle cx="70" cy="106" r="9.5" fill="#5B4636" />
+            <circle cx="110" cy="106" r="9.5" fill="#5B4636" />
+            <circle cx="73" cy="102.5" r="3" fill="#fff" />
+            <circle cx="113" cy="102.5" r="3" fill="#fff" />
           </>
         )}
         {eyes === "closed-happy" && (

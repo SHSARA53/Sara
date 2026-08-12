@@ -8,7 +8,7 @@ import { QuietModeScreen } from "./QuietModeScreen";
 
 const navItems = [
   { to: "/", label: "home" as const, icon: "🏠" },
-  { to: "/topics", label: "learn" as const, icon: "📚" },
+  { to: "/map", label: "learn" as const, icon: "🗺️" },
   { to: "/rewards", label: "rewards" as const, icon: "⭐" },
 ];
 

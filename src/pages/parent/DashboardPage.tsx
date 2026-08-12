@@ -3,6 +3,7 @@ import { useAppState } from "../../state/AppStateContext";
 import { useLang } from "../../hooks/useLang";
 import { ProgressBar } from "../../components/common/ProgressBar";
 import { topics, getTopic } from "../../data/topics/topics";
+import { getWorldByTopicId } from "../../data/worlds/worlds";
 import {
   sessionsForToday,
   minutesForSessions,
@@ -11,6 +12,14 @@ import {
   groupSessionsByRecency,
   recommendTopics,
 } from "../../services/learning/dashboardStats";
+import type { LocalizedText } from "../../models/types";
+
+function worldOrTopicDisplay(topicId: string): { icon: string; title: LocalizedText; skills?: LocalizedText[] } | null {
+  const world = getWorldByTopicId(topicId);
+  if (world) return { icon: world.icon, title: world.title, skills: world.skills };
+  const topic = getTopic(topicId);
+  return topic ? { icon: topic.icon, title: topic.title } : null;
+}
 
 export function DashboardPage() {
   const { state } = useAppState();
@@ -22,6 +31,7 @@ export function DashboardPage() {
   const accuracyToday = accuracyForSessions(todaySessions);
   const grouped = groupSessionsByRecency(state.sessions);
   const recommendations = recommendTopics(state.progress, state.settings.enabledTopicIds);
+  const favorite = recommendations.find((rec) => rec.reason === "favorite");
 
   const visibleTopics = topics.filter((topic) => state.settings.enabledTopicIds.includes(topic.id) && topic.id !== "games");
 
@@ -58,21 +68,36 @@ export function DashboardPage() {
         <StatCard label={ui("accuracy")} value={`${accuracyToday}%`} />
       </div>
 
+      {favorite &&
+        (() => {
+          const display = worldOrTopicDisplay(favorite.topicId);
+          if (!display) return null;
+          return (
+            <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+              <span className="text-3xl">{display.icon}</span>
+              <div>
+                <p className="text-xs font-bold uppercase text-choco/50">{ui("favoriteWorld")}</p>
+                <p className="font-bold">{tr(display.title)}</p>
+              </div>
+            </div>
+          );
+        })()}
+
       {recommendations.length > 0 && (
         <section>
           <h2 className="mb-2 text-lg font-bold">{ui("recommendations")}</h2>
           <div className="flex flex-col gap-2">
             {recommendations.map((rec) => {
-              const topic = getTopic(rec.topicId);
-              if (!topic) return null;
+              const display = worldOrTopicDisplay(rec.topicId);
+              if (!display) return null;
               return (
                 <div key={rec.topicId} className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
                   <span className="flex items-center gap-2 font-bold">
-                    <span className="text-2xl">{topic.icon}</span>
-                    {tr(topic.title)}
+                    <span className="text-2xl">{display.icon}</span>
+                    {tr(display.title)}
                   </span>
                   <button
-                    onClick={() => startRecommended(topic.id)}
+                    onClick={() => startRecommended(rec.topicId)}
                     className="no-select rounded-full bg-berry px-4 py-2 text-sm font-bold text-white"
                   >
                     {ui("startRecommended")}
@@ -86,18 +111,24 @@ export function DashboardPage() {
 
       <section>
         <h2 className="mb-2 text-lg font-bold">{ui("progress")}</h2>
-        <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
           {visibleTopics.map((topic) => {
+            const display = worldOrTopicDisplay(topic.id)!;
             const entry = state.progress[topic.id];
             return (
               <div key={topic.id}>
                 <div className="mb-1 flex items-center justify-between text-sm font-bold">
                   <span>
-                    {topic.icon} {tr(topic.title)}
+                    {display.icon} {tr(display.title)}
                   </span>
                   <span>{entry?.overallMastery ?? 0}%</span>
                 </div>
                 <ProgressBar value={entry?.overallMastery ?? 0} />
+                {display.skills && (
+                  <p className="mt-1 text-xs text-choco/50">
+                    {ui("skillsTaught")}: {display.skills.map((skill) => tr(skill)).join(" · ")}
+                  </p>
+                )}
               </div>
             );
           })}

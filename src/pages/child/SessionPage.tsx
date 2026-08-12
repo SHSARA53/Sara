@@ -12,6 +12,7 @@ import { buildSession } from "../../services/learning/sessionGenerator";
 import { getTodaysAdventureTopics } from "../../services/learning/dailyAdventure";
 import { rewardForActivityResult, rewardForSessionCompletion, mergeRewardBundles, emptyRewardBundle } from "../../services/learning/rewardEngine";
 import { getSticker } from "../../data/stickers";
+import { getWorld, getWorldByTopicId } from "../../data/worlds/worlds";
 import type { ActivityResult, LearningSession, RewardBundle } from "../../models/types";
 import { speak, playEffect, stopSpeaking } from "../../services/audio/audioService";
 
@@ -19,36 +20,48 @@ interface SessionLocationState {
   topicIds?: string[];
   durationMinutes?: number;
   difficultyOverride?: 1 | 2 | 3;
+  worldId?: string;
+  resume?: boolean;
 }
 
-type Phase = "intro" | "playing" | "break" | "complete";
+type Phase = "intro" | "playing" | "break" | "chest" | "reveal" | "worldCelebration" | "complete";
 
 export function SessionPage() {
-  const { state, recordAnswer, addRewards, addSession } = useAppState();
+  const { state, recordAnswer, recordActivityComplete, addRewards, addSession, setInProgressSession, celebrateWorld, celebrateFirstActivity } =
+    useAppState();
   const { ui, lang, tr } = useLang();
   const navigate = useNavigate();
   const location = useLocation();
 
   const locState = (location.state as SessionLocationState) ?? {};
+  const isResume = Boolean(locState.resume && state.inProgressSession);
   const topicIds = locState.topicIds?.length ? locState.topicIds : getTodaysAdventureTopics(state.profile?.createdAt ?? Date.now());
   const durationMinutes = locState.durationMinutes ?? 8;
+  const world = locState.worldId ? getWorld(locState.worldId) : topicIds.length === 1 ? getWorldByTopicId(topicIds[0]) : undefined;
 
-  const [phase, setPhase] = useState<Phase>("intro");
-  const [session, setSession] = useState<LearningSession | null>(null);
-  const [index, setIndex] = useState(0);
-  const [sessionRewards, setSessionRewards] = useState<RewardBundle>(emptyRewardBundle());
+  const [phase, setPhase] = useState<Phase>(isResume ? "playing" : "intro");
+  const [session, setSession] = useState<LearningSession | null>(isResume ? (state.inProgressSession!.session) : null);
+  const [index, setIndex] = useState(isResume ? state.inProgressSession!.index : 0);
+  const [sessionRewards, setSessionRewards] = useState<RewardBundle>(isResume ? state.inProgressSession!.rewardsSoFar : emptyRewardBundle());
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [justCompletedWorld, setJustCompletedWorld] = useState<typeof world>(undefined);
   const breakShown = useRef(false);
 
-  const sessionRef = useRef<LearningSession | null>(null);
+  const sessionRef = useRef<LearningSession | null>(isResume ? state.inProgressSession!.session : null);
+  const priorExploredRef = useRef(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => speak(ui("startLearning"), lang), 300);
+    const timer = setTimeout(() => speak(isResume ? ui("continueAdventure") : ui("startLearning"), lang), 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startSession = () => {
+    // Snapshot "explored so far" before this session adds to it, so we can
+    // tell whether this session is the one that pushes the world over its
+    // exploration target (only meaningful for a single-world session).
+    priorExploredRef.current = topicIds.length === 1 ? (state.progress[topicIds[0]]?.activitiesCompleted ?? 0) : 0;
+
     const built = buildSession({
       topicIds,
       durationMinutes,
@@ -59,28 +72,40 @@ export function SessionPage() {
     setSession(built);
     setIndex(0);
     setPhase("playing");
+    setInProgressSession({ session: built, index: 0, rewardsSoFar: emptyRewardBundle() });
   };
 
   const finishSession = (finalResults: ActivityResult[], finalRewards: RewardBundle) => {
-    const completionBundle = rewardForSessionCompletion(state.rewards.stickerIds);
+    const currentSession = sessionRef.current as LearningSession;
+    const completionBundle = rewardForSessionCompletion(state.rewards.stickerIds, world?.id);
     const totalBundle = mergeRewardBundles(finalRewards, completionBundle);
     setSessionRewards(totalBundle);
 
     const completedSession: LearningSession = {
-      ...(sessionRef.current as LearningSession),
+      ...currentSession,
       results: finalResults,
       completedAt: Date.now(),
       rewardsEarned: totalBundle,
     };
     addSession(completedSession);
     addRewards(totalBundle);
+    setInProgressSession(null);
+    if (!state.rewards.hasCelebratedFirstActivity) celebrateFirstActivity();
+
+    if (world && topicIds.length === 1) {
+      const finalExplored = priorExploredRef.current + currentSession.activities.length;
+      if (finalExplored >= world.explorationTarget && !state.rewards.celebratedWorldIds.includes(world.id)) {
+        setJustCompletedWorld(world);
+      }
+    }
+
     playEffect("completion");
-    speak(ui("wellDone"), lang);
-    setPhase("complete");
+    speak(ui("youFoundTreasure"), lang);
+    setPhase("chest");
   };
 
   const resultsRef = useRef<ActivityResult[]>([]);
-  const rewardsRef = useRef<RewardBundle>(emptyRewardBundle());
+  const rewardsRef = useRef<RewardBundle>(isResume ? state.inProgressSession!.rewardsSoFar : emptyRewardBundle());
 
   const handleActivityComplete = (result: EngineActivityResult) => {
     const currentSession = sessionRef.current!;
@@ -107,6 +132,7 @@ export function SessionPage() {
       resultsRef.current.push(activityResult);
       bundleForActivity = mergeRewardBundles(bundleForActivity, rewardForActivityResult(activityResult));
     }
+    recordActivityComplete(result.topicId);
 
     rewardsRef.current = mergeRewardBundles(rewardsRef.current, bundleForActivity);
     setSessionRewards(rewardsRef.current);
@@ -119,6 +145,8 @@ export function SessionPage() {
       finishSession(resultsRef.current, rewardsRef.current);
       return;
     }
+
+    setInProgressSession({ session: currentSession, index: nextIndex, rewardsSoFar: rewardsRef.current });
 
     if (!breakShown.current && total >= 6 && nextIndex === midpoint) {
       breakShown.current = true;
@@ -139,10 +167,27 @@ export function SessionPage() {
     navigate("/");
   };
 
+  const openChest = () => {
+    playEffect("sticker");
+    speak(ui("wellDone"), lang);
+    setPhase("reveal");
+  };
+
+  const continueAfterReveal = () => {
+    if (justCompletedWorld) {
+      celebrateWorld(justCompletedWorld.id);
+      setPhase("worldCelebration");
+    } else {
+      setPhase("complete");
+    }
+  };
+
   // Mid-activity, a single accidental tap must never silently discard the
   // session - a toddler brushing this button shouldn't lose the game. Once
   // there's nothing left to lose (intro screen, or the celebration at the
-  // end), leaving is harmless and skips the confirmation.
+  // end), leaving is harmless and skips the confirmation. The in-progress
+  // session itself is never cleared here, so leaving mid-activity can
+  // always be resumed later from "Continue Adventure".
   const handleExitTap = () => {
     if (phase === "playing" || phase === "break") {
       stopSpeaking();
@@ -227,22 +272,47 @@ export function SessionPage() {
             exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-6 text-center"
           >
-            <Confetti count={14} />
+            {!state.settings.calmMode && <Confetti count={14} />}
             <Mascot mood="celebrating" size={150} />
             <h2 className="text-2xl font-extrabold">{ui("takeABreak")}</h2>
             <BigButton onClick={() => setPhase("playing")}>{ui("continue")}</BigButton>
           </motion.div>
         )}
 
-        {phase === "complete" && (
+        {phase === "chest" && (
           <motion.div
-            key="complete"
+            key="chest"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center gap-6 text-center"
+          >
+            <Mascot mood="excited" size={140} />
+            <h1 className="text-2xl font-extrabold sm:text-3xl">{ui("youFoundTreasure")}</h1>
+            <motion.button
+              type="button"
+              onClick={openChest}
+              whileTap={{ scale: 0.9 }}
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 1.4, repeat: Infinity }}
+              className="no-select text-8xl"
+              aria-label={ui("openChest")}
+            >
+              🎁
+            </motion.button>
+            <BigButton onClick={openChest}>{ui("openChest")}</BigButton>
+          </motion.div>
+        )}
+
+        {phase === "reveal" && (
+          <motion.div
+            key="reveal"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-5 text-center"
           >
-            <Confetti />
+            {!state.settings.calmMode && <Confetti />}
             <Mascot mood="celebrating" size={170} />
             <h1 className="text-3xl font-extrabold">{ui("wellDone")}</h1>
 
@@ -265,6 +335,36 @@ export function SessionPage() {
               </motion.div>
             )}
 
+            <BigButton onClick={continueAfterReveal}>{ui("continue")}</BigButton>
+          </motion.div>
+        )}
+
+        {phase === "worldCelebration" && justCompletedWorld && (
+          <motion.div
+            key="worldCelebration"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center gap-5 text-center"
+          >
+            {!state.settings.calmMode && <Confetti />}
+            <span className="text-7xl">{justCompletedWorld.icon}</span>
+            <h1 className="text-2xl font-extrabold sm:text-3xl">{ui("worldExplored")}</h1>
+            <p className="text-lg font-bold text-berry">{tr(justCompletedWorld.title)}</p>
+            <BigButton onClick={() => setPhase("complete")}>{ui("continue")}</BigButton>
+          </motion.div>
+        )}
+
+        {phase === "complete" && (
+          <motion.div
+            key="complete"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center gap-5 text-center"
+          >
+            <Mascot mood="happy" size={150} />
+            <h1 className="text-2xl font-extrabold sm:text-3xl">{ui("wellDone")}</h1>
             <BigButton onClick={exitToHome}>{ui("home")}</BigButton>
           </motion.div>
         )}

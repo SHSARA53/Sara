@@ -1,5 +1,5 @@
 import type { ActivityResult, RewardBundle } from "../../models/types";
-import { stickers } from "../../data/stickers";
+import { stickers, stickersForWorld } from "../../data/stickers";
 import { pick } from "../../utils/rng";
 
 export function emptyRewardBundle(): RewardBundle {
@@ -19,14 +19,25 @@ export function rewardForActivityResult(result: ActivityResult): RewardBundle {
   return bundle;
 }
 
-/** Rewards for finishing a full session, including a new sticker when available. */
-export function rewardForSessionCompletion(ownedStickerIds: string[]): RewardBundle {
+/**
+ * Rewards for finishing a full session, including a new sticker when
+ * available. The sticker is a meaningful, predetermined pick tied to the
+ * world just explored (not a random gacha-style draw across the whole
+ * collection) - completing a Rainbow Garden session finds a Rainbow Garden
+ * sticker, so the treasure chest always makes sense with what was just
+ * played. Falls back to any unowned sticker, then any sticker at all once
+ * the whole collection is complete.
+ */
+export function rewardForSessionCompletion(ownedStickerIds: string[], worldId?: string): RewardBundle {
   const bundle = emptyRewardBundle();
   bundle.rainbows = 1;
   bundle.balloons = 1;
 
-  const unowned = stickers.filter((sticker) => !ownedStickerIds.includes(sticker.id));
-  const pool = unowned.length > 0 ? unowned : stickers;
+  const worldStickers = worldId ? stickersForWorld(worldId) : [];
+  const unownedInWorld = worldStickers.filter((sticker) => !ownedStickerIds.includes(sticker.id));
+  const unownedAnywhere = stickers.filter((sticker) => !ownedStickerIds.includes(sticker.id));
+
+  const pool = unownedInWorld.length > 0 ? unownedInWorld : unownedAnywhere.length > 0 ? unownedAnywhere : stickers;
   const chosen = pick(pool, Math.random);
   bundle.stickerIds = [chosen.id];
 

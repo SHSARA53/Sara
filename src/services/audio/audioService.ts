@@ -15,9 +15,11 @@ interface AudioConfig {
   soundEnabled: boolean;
   voiceEnabled: boolean;
   volume: number; // 0-1
+  /** Calm Mode: softer effect volume and a slower, gentler speaking rate for tired/wind-down moments. */
+  calm: boolean;
 }
 
-let config: AudioConfig = { soundEnabled: true, voiceEnabled: true, volume: 0.8 };
+let config: AudioConfig = { soundEnabled: true, voiceEnabled: true, volume: 0.8, calm: false };
 
 export function setAudioConfig(next: Partial<AudioConfig>): void {
   config = { ...config, ...next };
@@ -54,9 +56,9 @@ export function speak(text: string | LocalizedText, lang: Lang): void {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(message);
   utterance.lang = lang === "he" ? "he-IL" : "en-US";
-  utterance.rate = 0.92;
-  utterance.pitch = 1.15;
-  utterance.volume = config.volume;
+  utterance.rate = config.calm ? 0.82 : 0.92;
+  utterance.pitch = config.calm ? 1.05 : 1.15;
+  utterance.volume = config.calm ? config.volume * 0.75 : config.volume;
   const voice = voiceForLang(lang);
   if (voice) utterance.voice = voice;
 
@@ -150,9 +152,10 @@ export function playEffect(key: SoundEffectKey): void {
   if (!ctx) return;
 
   const notes = EFFECT_NOTES[key];
+  const peakGain = (config.calm ? 0.11 : 0.18) * config.volume;
   let t = ctx.currentTime;
   for (const note of notes) {
-    tone(ctx, t, note.freq, note.dur, 0.18 * config.volume, note.type);
+    tone(ctx, t, note.freq, note.dur, peakGain, note.type);
     t += note.dur * 0.85;
   }
 }

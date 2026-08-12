@@ -93,6 +93,12 @@ export function SettingsPage() {
       </section>
 
       <section className="rounded-2xl bg-white p-4 shadow-sm">
+        <h2 className="mb-1 text-lg font-bold">{ui("calmMode")}</h2>
+        <p className="mb-3 text-xs text-choco/50">{ui("calmModeDescription")}</p>
+        <ToggleRow label={ui("calmMode")} checked={state.settings.calmMode} onChange={(v) => updateSettings({ calmMode: v })} />
+      </section>
+
+      <section className="rounded-2xl bg-white p-4 shadow-sm">
         <h2 className="mb-3 text-lg font-bold">{ui("quietMode")}</h2>
         <div className="flex items-center gap-3">
           <input

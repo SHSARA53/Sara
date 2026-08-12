@@ -27,6 +27,18 @@ describe("generateActivity FIND", () => {
     const activity = generateActivity(shapesTopic, "FIND", 3, { rng: createRng(2) }); // shapes has 4 items, level3 wants 4
     expect(activity.items.length).toBeLessThanOrEqual(shapesTopic.vocabulary.length);
   });
+
+  it("honors forcedVocabId so a story scene's narration always matches the generated activity", () => {
+    for (let seed = 0; seed < 15; seed++) {
+      const activity = generateActivity(colorsTopic, "FIND", 2, { rng: createRng(seed), forcedVocabId: "red" });
+      expect(activity.correctIds).toEqual(["red"]);
+    }
+  });
+
+  it("falls back to normal selection if forcedVocabId doesn't exist in the topic", () => {
+    const activity = generateActivity(colorsTopic, "FIND", 1, { rng: createRng(3), forcedVocabId: "not-a-real-color" });
+    expect(colorsTopic.vocabulary.some((v) => v.id === activity.correctIds[0])).toBe(true);
+  });
 });
 
 describe("generateActivity COUNT", () => {

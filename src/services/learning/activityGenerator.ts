@@ -24,6 +24,8 @@ function choiceCount(difficulty: 1 | 2 | 3): number {
 interface GenOptions {
   rng?: () => number;
   masteryByVocab?: Record<string, MasteryEntry>;
+  /** FIND only: force the correct answer to a specific vocab id instead of picking one - used by story scenes ("help Bunny find the RED balloon" must actually generate a find-red activity). */
+  forcedVocabId?: string;
 }
 
 /**
@@ -39,6 +41,10 @@ function vocabPoolFor(topic: Topic): VocabItem[] {
 
 function pickFocusVocab(topic: Topic, opts: GenOptions): VocabItem {
   const rng = opts.rng ?? Math.random;
+  if (opts.forcedVocabId) {
+    const forced = topic.vocabulary.find((item) => item.id === opts.forcedVocabId);
+    if (forced) return forced;
+  }
   if (opts.masteryByVocab) {
     const [chosen] = weightedSample(
       topic.vocabulary,

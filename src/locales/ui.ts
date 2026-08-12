@@ -79,6 +79,28 @@ export const uiStrings = {
   },
   keepPlaying: { he: "נשארים לשחק", en: "Keep playing" },
   leaveAnyway: { he: "כן, לצאת", en: "Yes, leave" },
+  myStickerBook: { he: "אוסף המדבקות שלי", en: "My Sticker Book" },
+  comingNextAdventure: { he: "בהרפתקה הבאה!", en: "Coming on our next adventure!" },
+  exploreWorld: { he: "לגלות עולם", en: "Explore World" },
+  continueAdventure: { he: "להמשיך בהרפתקה", en: "Continue Adventure" },
+  todaysAdventureShort: { he: "ההרפתקה של היום", en: "Today's Adventure" },
+  activitiesExplored: { he: "פעילויות התגלו", en: "activities explored" },
+  openChest: { he: "פתחו את תיבת האוצר!", en: "Open the treasure chest!" },
+  youFoundTreasure: { he: "מצאתם אוצר!", en: "You found a treasure!" },
+  worldExplored: { he: "גיליתם עולם חדש!", en: "Look what we discovered!" },
+  newPlaceAppeared: { he: "מקום חדש הופיע!", en: "A new place appeared!" },
+  missedYou: { he: "חזרתם! התגעגעתי!", en: "You're back! I missed you!" },
+  wantAdventure: { he: "רוצים לצאת להרפתקה?", en: "Want to go on an adventure?" },
+  favoriteWorld: { he: "העולם האהוב", en: "Favorite World" },
+  mostPracticed: { he: "תורגל הכי הרבה", en: "Most Practiced" },
+  calmMode: { he: "מצב רגוע", en: "Calm Mode" },
+  calmModeDescription: {
+    he: "פחות אנימציות, קול רגוע יותר - לרגעים שקטים",
+    en: "Fewer animations, gentler sound - for quiet moments",
+  },
+  worldMap: { he: "מפת העולם", en: "World Map" },
+  skillsTaught: { he: "מה לומדים כאן", en: "Skills taught" },
+  storyTime: { he: "זמן סיפור", en: "Story Time" },
 } as const satisfies Record<string, Record<Lang, string>>;
 
 export type UiStringKey = keyof typeof uiStrings;

@@ -10,6 +10,7 @@ export function createDefaultSettings(): AppSettings {
     reducedMotion: false,
     enabledTopicIds: topics.map((topic) => topic.id),
     difficulty: "normal",
+    calmMode: false,
   };
 }
 
@@ -21,6 +22,8 @@ export function createDefaultRewards(): RewardState {
     balloons: 0,
     stickerIds: [],
     dailyStreak: 0,
+    celebratedWorldIds: [],
+    hasCelebratedFirstActivity: false,
   };
 }
 
@@ -32,5 +35,6 @@ export function createDefaultState(): AppState {
     progress: {},
     sessions: [],
     onboardingComplete: false,
+    inProgressSession: null,
   };
 }

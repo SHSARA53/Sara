@@ -2,6 +2,7 @@ import type {
   AppSettings,
   AppState,
   ChildProfile,
+  InProgressSession,
   LearningSession,
   RewardBundle,
 } from "../models/types";
@@ -15,8 +16,12 @@ export type AppAction =
   | { type: "UPDATE_SETTINGS"; patch: Partial<AppSettings> }
   | { type: "COMPLETE_ONBOARDING" }
   | { type: "RECORD_ANSWER"; topicId: string; vocabId: string; correct: boolean }
+  | { type: "RECORD_ACTIVITY_COMPLETE"; topicId: string }
   | { type: "ADD_REWARDS"; bundle: RewardBundle }
   | { type: "ADD_SESSION"; session: LearningSession }
+  | { type: "SET_IN_PROGRESS_SESSION"; value: InProgressSession | null }
+  | { type: "CELEBRATE_WORLD"; worldId: string }
+  | { type: "CELEBRATE_FIRST_ACTIVITY" }
   | { type: "RESET_PROGRESS" };
 
 const MAX_STORED_SESSIONS = 120;
@@ -49,13 +54,27 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...withDifficulty,
         masteryByVocab,
         overallMastery: computeOverallMastery(masteryByVocab),
-        activitiesCompleted: existing.activitiesCompleted + 1,
         lastPracticedAt: now,
       };
 
       return {
         ...state,
         progress: { ...state.progress, [action.topicId]: nextProgress },
+      };
+    }
+
+    // Separate from RECORD_ANSWER on purpose: a single MATCH/MEMORY/SORT
+    // activity touches several vocab items at once (several RECORD_ANSWER
+    // calls) but should only count as *one* explored activity - otherwise a
+    // 4-pair memory game would inflate "activities explored" by 4.
+    case "RECORD_ACTIVITY_COMPLETE": {
+      const existing = state.progress[action.topicId] ?? createEmptyTopicProgress(action.topicId);
+      return {
+        ...state,
+        progress: {
+          ...state.progress,
+          [action.topicId]: { ...existing, activitiesCompleted: existing.activitiesCompleted + 1 },
+        },
       };
     }
 
@@ -76,7 +95,11 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     }
 
     case "ADD_SESSION": {
-      const { streak, day } = updateStreak(state.rewards.dailyStreak, state.rewards.lastSessionDay);
+      // Base the streak on when the session actually happened, not on
+      // whenever this reducer call happens to run - keeps it correct
+      // around midnight and makes it independently testable.
+      const sessionDate = new Date(action.session.completedAt ?? action.session.startedAt);
+      const { streak, day } = updateStreak(state.rewards.dailyStreak, state.rewards.lastSessionDay, sessionDate);
       const sessions = [action.session, ...state.sessions].slice(0, MAX_STORED_SESSIONS);
       return {
         ...state,
@@ -85,12 +108,37 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       };
     }
 
+    case "SET_IN_PROGRESS_SESSION":
+      return { ...state, inProgressSession: action.value };
+
+    case "CELEBRATE_WORLD":
+      if (state.rewards.celebratedWorldIds.includes(action.worldId)) return state;
+      return {
+        ...state,
+        rewards: { ...state.rewards, celebratedWorldIds: [...state.rewards.celebratedWorldIds, action.worldId] },
+      };
+
+    case "CELEBRATE_FIRST_ACTIVITY":
+      if (state.rewards.hasCelebratedFirstActivity) return state;
+      return { ...state, rewards: { ...state.rewards, hasCelebratedFirstActivity: true } };
+
     case "RESET_PROGRESS":
       return {
         ...state,
         progress: {},
         sessions: [],
-        rewards: { stars: 0, hearts: 0, rainbows: 0, balloons: 0, stickerIds: [], dailyStreak: 0, lastSessionDay: undefined },
+        inProgressSession: null,
+        rewards: {
+          stars: 0,
+          hearts: 0,
+          rainbows: 0,
+          balloons: 0,
+          stickerIds: [],
+          dailyStreak: 0,
+          lastSessionDay: undefined,
+          celebratedWorldIds: [],
+          hasCelebratedFirstActivity: false,
+        },
       };
 
     default:

@@ -7,6 +7,9 @@ import { Mascot } from "./components/mascot/Mascot";
 import { ChildLayout } from "./components/child/ChildLayout";
 import { HomePage } from "./pages/child/HomePage";
 import { TopicsPage } from "./pages/child/TopicsPage";
+import { WorldMapPage } from "./pages/child/WorldMapPage";
+import { WorldDetailPage } from "./pages/child/WorldDetailPage";
+import { StoryPage } from "./pages/child/StoryPage";
 import { RewardsPage } from "./pages/child/RewardsPage";
 import { SessionPage } from "./pages/child/SessionPage";
 import { OnboardingPage } from "./pages/child/OnboardingPage";
@@ -50,6 +53,8 @@ export default function App() {
           }
         >
           <Route path="/" element={<HomePage />} />
+          <Route path="/map" element={<WorldMapPage />} />
+          <Route path="/world/:worldId" element={<WorldDetailPage />} />
           <Route path="/topics" element={<TopicsPage />} />
           <Route path="/rewards" element={<RewardsPage />} />
         </Route>
@@ -59,6 +64,15 @@ export default function App() {
           element={
             <RequireProfile>
               <SessionPage />
+            </RequireProfile>
+          }
+        />
+
+        <Route
+          path="/story/:storyId"
+          element={
+            <RequireProfile>
+              <StoryPage />
             </RequireProfile>
           }
         />
