@@ -419,7 +419,7 @@ function editMealIngredients(id) {
 
 const NEXT_MEAL_TYPE = { breakfast: 'lunch', lunch: 'dinner', dinner: 'dinner' };
 
-mealForm.addEventListener('submit', (e) => {
+mealForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const nameInput = $('#meal-name');
   const name = nameInput.value.trim();
@@ -450,10 +450,37 @@ mealForm.addEventListener('submit', (e) => {
   populateRecipeSuggestions();
 
   if (meal.ingredients.length === 0) {
-    // No known ingredients yet - either an unrecognized dish, or a custom
-    // recipe that hasn't had its ingredients filled in yet. Either way,
-    // invite the user to define them right now instead of silently adding
-    // an empty meal that can't contribute to the shopping list.
+    if (store.getApiKey()) {
+      showToast(`🤖 ה-AI כותב מתכון ל${meal.name}...`);
+      const aiRecipe = await fetchAIRecipe(name);
+      if (aiRecipe) {
+        // Save it as a reusable custom recipe too, so choosing this dish
+        // again later comes pre-filled with no extra API call.
+        const newRecipe = {
+          id: `custom-${uid()}`, nameHe: aiRecipe.nameHe, nameEn: aiRecipe.nameEn,
+          servings: 4, mealTypes: ['breakfast', 'lunch', 'dinner'],
+          ingredients: aiRecipe.ingredients.map((i) => ({ ...i })),
+        };
+        state.customRecipes.push(newRecipe);
+        store.setCustomRecipes(state.customRecipes);
+
+        meal.name = aiRecipe.nameHe;
+        meal.recipeId = newRecipe.id;
+        meal.ingredients = aiRecipe.ingredients;
+        persistMeals();
+        renderMealPlanning();
+        renderShopping();
+        populateRecipeSuggestions();
+        populatePantrySuggestions();
+        showToast(`✨ מתכון ל${meal.name} נוצר עם AI!`);
+        return;
+      }
+      showToast('⚠️ ה-AI לא הצליח - הוסיפו רכיבים ידנית');
+    }
+    // No known ingredients yet - either an unrecognized dish, no AI key set,
+    // or the AI call failed. Either way, invite the user to define the
+    // ingredients right now instead of silently adding an empty meal that
+    // can't contribute to the shopping list.
     editMealIngredients(meal.id);
   }
 });
@@ -732,6 +759,102 @@ $('#add-custom-recipe-btn').addEventListener('click', () => {
     const mt = MEAL_TYPE_BY_ID[meal.mealType];
     showToast(`${mt.icon} ${meal.name} נוסף ל${mt.label} - הוסיפו רכיבים`);
     editMealIngredients(meal.id); // replaces this modal's content directly
+  });
+  openModal(form);
+});
+
+// ---------------------------------------------------------------------
+// AI recipe lookup (bring-your-own Claude API key)
+// ---------------------------------------------------------------------
+// When a typed dish matches nothing in the built-in or custom recipe
+// lists, and the user has saved their own Claude API key, ask Claude for
+// a real recipe instead of leaving the meal empty. The key is called
+// directly from the browser (never through any server of ours) and is
+// only ever stored on this device.
+const AI_MODEL = 'claude-haiku-4-5-20251001';
+
+async function fetchAIRecipe(dishName) {
+  const apiKey = store.getApiKey();
+  if (!apiKey) return null;
+
+  const unitIds = UNITS.map((u) => u.id).join(', ');
+  const prompt = `תן מתכון ריאלי בעברית עבור "${dishName}", בכמויות ל-4 מנות.
+החזירי אך ורק אובייקט JSON תקני אחד, בלי טקסט נוסף לפני או אחרי, בלי בלוק קוד של markdown, בפורמט הזה בדיוק:
+{"nameHe": "שם המנה בעברית", "nameEn": "Dish name in English", "ingredients": [{"name": "שם מצרך בעברית", "quantity": 2, "unit": "יחידה"}]}
+שדה "unit" בכל רכיב חייב להיות בדיוק אחת מהמילים הבאות (בלי תוספות): ${unitIds}.
+תני בין 4 ל-10 רכיבים אמיתיים עם כמויות הגיוניות למתכון ביתי.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text = data?.content?.[0]?.text ?? '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (!Array.isArray(parsed.ingredients)) return null;
+
+    const validUnits = new Set(UNITS.map((u) => u.id));
+    const ingredients = parsed.ingredients
+      .filter((i) => i && i.name && i.quantity)
+      .map((i) => ({
+        name: String(i.name).trim(),
+        quantity: Number(i.quantity) || 1,
+        unit: validUnits.has(i.unit) ? i.unit : 'יחידה',
+        category: guessCategory(String(i.name)),
+      }));
+    if (ingredients.length === 0) return null;
+
+    return { nameHe: parsed.nameHe || dishName, nameEn: parsed.nameEn || '', ingredients };
+  } catch {
+    return null; // Network error, invalid key, rate limit, bad JSON, etc.
+  }
+}
+
+$('#ai-settings-btn').addEventListener('click', () => {
+  const hasKey = !!store.getApiKey();
+  const keyInput = el('input', {
+    type: 'password', placeholder: 'sk-ant-...', autocomplete: 'off',
+    value: store.getApiKey(), class: 'w-full border-2 border-ink rounded-xl px-3 py-2 mb-3 font-mono text-sm',
+  });
+  const form = el('form', {}, [
+    el('h2', { class: 'text-lg font-black mb-2' }, '🤖 חיפוש מתכונים עם AI'),
+    el('p', { class: 'text-sm font-medium text-ink/60 mb-3' }, [
+      'כשמקלידים שם מנה שלא קיימת עדיין באפליקציה, ה-AI יכתוב לה מתכון אמיתי במקום להשאיר אותה ריקה. ',
+      'המפתח נשמר רק בטלפון הזה ונשלח ישירות ל-Anthropic - לא דרכי ולא לאף אחד אחר. השימוש כרוך בתשלום קטן (אגורות) לכל מתכון, דרך חשבון ה-API שלכם.',
+    ]),
+    el('a', {
+      href: 'https://console.anthropic.com/settings/keys', target: '_blank', rel: 'noopener',
+      class: 'inline-block text-sm font-extrabold text-violet-700 underline decoration-wavy decoration-2 mb-3',
+    }, 'איך מפיקים מפתח API ←'),
+    el('label', { class: 'text-xs font-bold text-ink/60 block mb-1' }, 'מפתח API'),
+    keyInput,
+    el('div', { class: 'flex gap-2' }, [
+      hasKey ? el('button', {
+        type: 'button', class: 'flex-1 bg-white text-red-600 border-[2.5px] border-ink rounded-full py-2.5 font-extrabold shadow-[3px_3px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all',
+        onclick: () => { store.setApiKey(''); closeModal(); showToast('🗑️ המפתח הוסר'); },
+      }, 'הסר מפתח') : null,
+      el('button', { type: 'submit', class: 'flex-1 bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all' }, 'שמור'),
+    ]),
+  ]);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    store.setApiKey(keyInput.value.trim());
+    closeModal();
+    showToast(keyInput.value.trim() ? '✅ המפתח נשמר' : '🗑️ המפתח הוסר');
   });
   openModal(form);
 });

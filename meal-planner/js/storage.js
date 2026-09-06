@@ -7,6 +7,7 @@ const KEYS = {
   meals: 'mealPlanner.meals.v1',
   customRecipes: 'mealPlanner.customRecipes.v1',
   bought: 'mealPlanner.bought.v1',
+  apiKey: 'mealPlanner.aiApiKey.v1',
 };
 
 function load(key, fallback) {
@@ -43,6 +44,13 @@ export const store = {
 
   getBought: () => load(KEYS.bought, {}),
   setBought: (bought) => save(KEYS.bought, bought),
+
+  // The user's own Claude API key, used only for direct browser calls to
+  // Anthropic to generate a recipe for a dish that isn't already known.
+  // Stored in this device's localStorage alone - never sent anywhere but
+  // straight to api.anthropic.com from the user's own browser.
+  getApiKey: () => load(KEYS.apiKey, ''),
+  setApiKey: (key) => save(KEYS.apiKey, key),
 };
 
 export function uid() {
