@@ -62,15 +62,16 @@ function encodePNG(width, height, rgba) {
 
 // --- Icon drawing -----------------------------------------------------
 
-const GRAD_TOP = [236, 72, 153]; // pink-500
-const GRAD_BOTTOM = [168, 85, 247]; // purple-500
+// Bold, flat, pop-art palette to match the app's neo-brutalist look:
+// solid sunshine-yellow ground, thick black outlines, saturated accents.
+const BG = [250, 204, 21]; // yellow-400
 const WHITE = [255, 255, 255];
-const ROSE = [251, 113, 133]; // rose-400 produce dot
-const VIOLET = [216, 180, 254]; // purple-300 produce dot
-const OUTLINE = [190, 60, 130];
+const INK = [26, 21, 35]; // near-black outline/text color used across the app
+const PINK = [236, 72, 153]; // pink-500 produce dot
+const VIOLET = [139, 92, 246]; // violet-500 produce dot
 
-function bgColorAt(v) {
-  return mix(GRAD_TOP, GRAD_BOTTOM, Math.min(Math.max(v, 0), 1));
+function bgColorAt() {
+  return BG;
 }
 
 function mix(base, color, alpha) {
@@ -101,15 +102,15 @@ function basketPixel(u, v) {
     const right = 0.5 + half;
     if (u >= left && u <= right) {
       // weave texture lines
-      const nearLine = Math.abs(v - 0.53) < 0.014 || Math.abs(v - 0.67) < 0.014;
-      if (nearLine) return { color: OUTLINE, alpha: 0.55 };
-      // outline near edges
+      const nearLine = Math.abs(v - 0.53) < 0.016 || Math.abs(v - 0.67) < 0.016;
+      if (nearLine) return { color: INK, alpha: 1 };
+      // thick comic-style outline near edges
       const edgeDist = Math.min(u - left, right - u, bottomY - v);
-      if (edgeDist < 0.012) return { color: OUTLINE, alpha: 0.8 };
+      if (edgeDist < 0.022) return { color: INK, alpha: 1 };
       return { color: WHITE, alpha: 1 };
     }
   }
-  // Handle: half-ring arch above the basket.
+  // Handle: half-ring arch above the basket, outlined in black on both edges.
   const handleCx = 0.5;
   const handleCy = 0.40;
   const outerR = 0.19;
@@ -117,12 +118,19 @@ function basketPixel(u, v) {
   const dx = u - handleCx;
   const dy = v - handleCy;
   const dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist <= outerR && dist >= innerR && v <= handleCy + 0.02) {
-    return { color: WHITE, alpha: 1 };
+  if (dist <= outerR + 0.016 && dist >= innerR - 0.016 && v <= handleCy + 0.02) {
+    if (dist <= outerR && dist >= innerR) return { color: WHITE, alpha: 1 };
+    return { color: INK, alpha: 1 };
   }
-  // Two "produce" circles peeking over the basket rim.
-  if (inCircle(u, v, 0.40, 0.385, 0.075)) return { color: ROSE, alpha: 1 };
-  if (inCircle(u, v, 0.60, 0.385, 0.075)) return { color: VIOLET, alpha: 1 };
+  // Two "produce" circles peeking over the basket rim, each ringed in black.
+  const dotRadius = 0.075;
+  const dotRing = dotRadius + 0.016;
+  if (inCircle(u, v, 0.40, 0.385, dotRing)) {
+    return inCircle(u, v, 0.40, 0.385, dotRadius) ? { color: PINK, alpha: 1 } : { color: INK, alpha: 1 };
+  }
+  if (inCircle(u, v, 0.60, 0.385, dotRing)) {
+    return inCircle(u, v, 0.60, 0.385, dotRadius) ? { color: VIOLET, alpha: 1 } : { color: INK, alpha: 1 };
+  }
   return null;
 }
 

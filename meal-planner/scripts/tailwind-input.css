@@ -1,3 +1,8 @@
 @import "tailwindcss";
 @source "../index.html";
 @source "../js/**/*.js";
+
+@theme {
+  --color-ink: #1a1523;
+  --color-cream: #fffbf0;
+}

@@ -1,7 +1,7 @@
 /* Small overrides beyond what Tailwind's utility classes cover. */
 
 html, body {
-  font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+  font-family: 'Rubik', system-ui, -apple-system, sans-serif;
 }
 
 /* Keep native tap highlight subtle and inputs comfortable on mobile. */
@@ -19,7 +19,8 @@ input, select, textarea, button {
   height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #f0abfc;
+  background: #ec4899;
+  border: 1px solid #1a1523;
   border-radius: 999px;
 }
 

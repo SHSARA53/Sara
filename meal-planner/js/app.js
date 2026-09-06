@@ -94,10 +94,12 @@ function showTab(tab) {
   $$('.tab-btn').forEach((b) => {
     const active = b.dataset.tab === tab;
     const pill = $('.tab-pill', b);
-    b.classList.toggle('text-gray-400', !active);
-    b.classList.toggle('text-pink-600', active);
-    pill.classList.toggle('bg-pink-100', active);
-    pill.classList.toggle('-translate-y-0.5', active);
+    b.classList.toggle('text-ink/40', !active);
+    b.classList.toggle('text-ink', active);
+    pill.classList.toggle('bg-yellow-300', active);
+    pill.classList.toggle('border-ink', active);
+    pill.classList.toggle('border-transparent', !active);
+    pill.classList.toggle('-translate-y-1', active);
     b.setAttribute('aria-current', active ? 'page' : 'false');
   });
   if (tab === 'shopping') renderShopping();
@@ -152,19 +154,19 @@ function renderPantry() {
   CATEGORIES.forEach((cat) => {
     const items = grouped[cat.id];
     if (!items || items.length === 0) return;
-    pantryList.appendChild(el('h3', { class: 'px-1 pt-3 pb-1 text-sm font-semibold text-gray-500 first:pt-0' }, `${cat.icon} ${cat.label}`));
+    pantryList.appendChild(el('h3', { class: 'px-1 pt-4 pb-1.5 text-sm font-black text-ink/70 first:pt-0' }, `${cat.icon} ${cat.label}`));
     items.forEach((item) => {
-      const row = el('div', { class: 'fade-in-item flex items-center gap-2 bg-white rounded-2xl px-3 py-2 mb-2 shadow-sm border border-pink-100/70' }, [
+      const row = el('div', { class: 'fade-in-item flex items-center gap-2 bg-white rounded-xl px-3 py-2 mb-2 border-[2.5px] border-ink shadow-[3px_3px_0_#1a1523]' }, [
         el('div', { class: 'flex-1 min-w-0' }, [
-          el('div', { class: 'font-medium text-gray-800 truncate', text: item.name }),
-          el('div', { class: 'text-xs text-gray-500', text: `${fmtQty(item.quantity)} ${UNIT_BY_ID[item.unit]?.label ?? item.unit}` }),
+          el('div', { class: 'font-bold text-ink truncate', text: item.name }),
+          el('div', { class: 'text-xs font-semibold text-ink/50', text: `${fmtQty(item.quantity)} ${UNIT_BY_ID[item.unit]?.label ?? item.unit}` }),
         ]),
         el('button', {
-          class: 'p-2 text-gray-400 hover:text-fuchsia-600 rounded-lg active:scale-90 transition-transform', 'aria-label': 'ערוך',
+          class: 'p-2 text-ink/50 hover:text-violet-600 rounded-lg active:scale-90 transition-transform', 'aria-label': 'ערוך',
           onclick: () => editPantryItem(item.id),
         }, '✏️'),
         el('button', {
-          class: 'p-2 text-gray-400 hover:text-red-500 rounded-lg active:scale-90 transition-transform', 'aria-label': 'מחק',
+          class: 'p-2 text-ink/50 hover:text-red-500 rounded-lg active:scale-90 transition-transform', 'aria-label': 'מחק',
           onclick: () => deletePantryItem(item.id),
         }, '🗑️'),
       ]);
@@ -182,18 +184,18 @@ function deletePantryItem(id) {
 function editPantryItem(id) {
   const item = state.pantry.find((p) => p.id === id);
   if (!item) return;
-  const nameInput = el('input', { type: 'text', value: item.name, class: 'w-full border border-gray-200 rounded-xl px-3 py-2 mb-3' });
-  const qtyInput = el('input', { type: 'number', step: '0.01', min: '0', value: item.quantity, class: 'w-full border border-gray-200 rounded-xl px-3 py-2 mb-3' });
-  const unitSelect = el('select', { class: 'w-full border border-gray-200 rounded-xl px-3 py-2 mb-3' }, unitOptions(item.unit));
-  const catSelect = el('select', { class: 'w-full border border-gray-200 rounded-xl px-3 py-2 mb-4' }, categoryOptions(item.category));
+  const nameInput = el('input', { type: 'text', value: item.name, class: 'w-full border-[2.5px] border-ink rounded-xl px-3 py-2 mb-3 font-medium' });
+  const qtyInput = el('input', { type: 'number', step: '0.01', min: '0', value: item.quantity, class: 'w-full border-[2.5px] border-ink rounded-xl px-3 py-2 mb-3 font-medium' });
+  const unitSelect = el('select', { class: 'w-full border-[2.5px] border-ink rounded-xl px-3 py-2 mb-3 font-medium' }, unitOptions(item.unit));
+  const catSelect = el('select', { class: 'w-full border-[2.5px] border-ink rounded-xl px-3 py-2 mb-4 font-medium' }, categoryOptions(item.category));
 
   const form = el('form', {}, [
-    el('h2', { class: 'text-lg font-bold mb-4 text-gray-800' }, '✏️ עריכת פריט מזווה'),
-    el('label', { class: 'text-sm text-gray-600' }, 'שם'), nameInput,
-    el('label', { class: 'text-sm text-gray-600' }, 'כמות'), qtyInput,
-    el('label', { class: 'text-sm text-gray-600' }, 'יחידה'), unitSelect,
-    el('label', { class: 'text-sm text-gray-600' }, 'קטגוריה'), catSelect,
-    el('button', { type: 'submit', class: 'w-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-full py-2.5 font-bold shadow-md shadow-pink-200 active:scale-95 transition-transform' }, 'שמור'),
+    el('h2', { class: 'text-lg font-black mb-4' }, '✏️ עריכת פריט מזווה'),
+    el('label', { class: 'text-sm font-bold text-ink/60' }, 'שם'), nameInput,
+    el('label', { class: 'text-sm font-bold text-ink/60' }, 'כמות'), qtyInput,
+    el('label', { class: 'text-sm font-bold text-ink/60' }, 'יחידה'), unitSelect,
+    el('label', { class: 'text-sm font-bold text-ink/60' }, 'קטגוריה'), catSelect,
+    el('button', { type: 'submit', class: 'w-full bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all' }, 'שמור'),
   ]);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -252,8 +254,8 @@ function renderChipGroup(container, options, isSelected, onSelect) {
     const selected = isSelected(opt.value);
     const btn = el('button', {
       type: 'button',
-      class: `shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold border transition-all active:scale-95 ${
-        selected ? `${opt.selectedClass} border-transparent shadow-sm` : 'bg-gray-50 text-gray-500 border-gray-200'
+      class: `shrink-0 rounded-full px-3 py-1.5 text-sm font-extrabold border-[2.5px] transition-all active:scale-95 ${
+        selected ? `${opt.selectedClass} border-ink shadow-[3px_3px_0_#1a1523] -translate-y-0.5` : 'bg-white text-ink/40 border-ink/20'
       }`,
       onclick: () => onSelect(opt.value),
     }, opt.label);
@@ -272,8 +274,8 @@ function renderMealTypeChips() {
 
 function renderDayChips() {
   const options = [
-    { value: '', label: 'ללא יום', selectedClass: 'bg-gray-200 text-gray-700' },
-    ...DAY_NAMES.map((d, i) => ({ value: String(i), label: d, selectedClass: 'bg-pink-500 text-white' })),
+    { value: '', label: 'ללא יום', selectedClass: 'bg-ink text-cream' },
+    ...DAY_NAMES.map((d, i) => ({ value: String(i), label: d, selectedClass: 'bg-pink-400 text-white' })),
   ];
   renderChipGroup(
     dayChipsEl,
@@ -299,14 +301,14 @@ function dayLabel(day) {
 
 function mealTypeSelect(meal) {
   return el('select', {
-    class: 'text-xs border rounded-lg px-1.5 py-1 bg-gray-50',
+    class: 'text-xs font-bold border-2 border-ink rounded-lg px-1.5 py-1 bg-white',
     onchange: (e) => { meal.mealType = e.target.value; persistMeals(); renderMealPlanning(); },
   }, MEAL_TYPES.map((mt) => el('option', { value: mt.id, ...(meal.mealType === mt.id ? { selected: 'selected' } : {}) }, `${mt.icon} ${mt.label}`)));
 }
 
 function daySelect(meal) {
   return el('select', {
-    class: 'text-xs border rounded-lg px-1.5 py-1 bg-gray-50',
+    class: 'text-xs font-bold border-2 border-ink rounded-lg px-1.5 py-1 bg-white',
     onchange: (e) => { meal.day = e.target.value === '' ? null : Number(e.target.value); persistMeals(); renderMealPlanning(); },
   }, [
     el('option', { value: '', ...(meal.day === null ? { selected: 'selected' } : {}) }, 'ללא יום'),
@@ -322,33 +324,33 @@ function renderMealPlanning() {
   dayOrder.forEach((day) => {
     const dayMeals = state.meals.filter((m) => m.day === day);
     if (dayMeals.length === 0) return;
-    mealList.appendChild(el('h3', { class: 'px-1 pt-3 pb-1 text-sm font-bold text-gray-600 first:pt-0' }, `📅 ${dayLabel(day)}`));
+    mealList.appendChild(el('h3', { class: 'px-1 pt-4 pb-1.5 text-sm font-black text-ink/70 first:pt-0' }, `📅 ${dayLabel(day)}`));
 
     MEAL_TYPES.forEach((mt) => {
       const meals = dayMeals.filter((m) => m.mealType === mt.id);
       if (meals.length === 0) return;
       mealList.appendChild(el('div', {
-        class: `fade-in-item inline-flex items-center gap-1 text-xs font-bold ${mt.chipText} ${mt.chipBg} rounded-full px-2.5 py-1 mb-1.5 mt-1`,
+        class: `fade-in-item inline-flex items-center gap-1 text-xs font-extrabold ${mt.chipText} ${mt.chipBg} border-2 border-ink rounded-full px-2.5 py-1 mb-1.5 mt-1`,
       }, `${mt.icon} ${mt.label}`));
 
       meals.forEach((meal) => {
         const recipe = meal.recipeId ? findRecipeById(meal.recipeId) : null;
         const isCustomUnmatched = meal.ingredients.length === 0;
-        const card = el('div', { class: `fade-in-item bg-white rounded-2xl px-3 py-3 mb-2 shadow-sm border-r-4 ${mt.border} border border-gray-100` }, [
+        const card = el('div', { class: `fade-in-item bg-white rounded-2xl px-3 py-3 mb-2.5 border-[2.5px] border-ink shadow-[4px_4px_0_#1a1523]` }, [
           el('div', { class: 'flex items-start justify-between gap-2' }, [
             el('div', { class: 'min-w-0' }, [
-              el('div', { class: 'font-semibold text-gray-800 truncate', text: meal.name }),
-              recipe?.nameEn ? el('div', { class: 'text-xs text-gray-400', text: recipe.nameEn }) : null,
-              el('div', { class: 'text-xs text-gray-500 mt-1', text: `${meal.ingredients.length} רכיבים` }),
+              el('div', { class: 'font-black text-ink truncate', text: meal.name }),
+              recipe?.nameEn ? el('div', { class: 'text-xs font-semibold text-ink/40', text: recipe.nameEn }) : null,
+              el('div', { class: 'text-xs font-bold text-ink/50 mt-1', text: `${meal.ingredients.length} רכיבים` }),
               isCustomUnmatched
-                ? el('div', { class: 'text-xs text-amber-600 mt-1', text: meal.recipeId ? '⚠️ עדיין אין רכיבים - לחצו על "ערוך מתכון"' : '⚠️ מתכון לא נמצא – הוסיפו רכיבים ידנית' })
+                ? el('div', { class: 'text-xs font-bold text-orange-600 mt-1', text: meal.recipeId ? '⚠️ עדיין אין רכיבים - לחצו על "ערוך מתכון"' : '⚠️ מתכון לא נמצא – הוסיפו רכיבים ידנית' })
                 : null,
             ]),
             el('div', { class: 'flex flex-col items-end gap-1 shrink-0' }, [mealTypeSelect(meal), daySelect(meal)]),
           ]),
-          el('div', { class: 'flex gap-2 mt-2' }, [
-            el('button', { class: 'text-sm px-3 py-1.5 rounded-full bg-fuchsia-50 text-fuchsia-700 font-medium active:scale-95 transition-transform', onclick: () => editMealIngredients(meal.id) }, '✏️ ערוך מתכון'),
-            el('button', { class: 'text-sm px-3 py-1.5 rounded-full bg-red-50 text-red-600 font-medium active:scale-95 transition-transform', onclick: () => deleteMeal(meal.id) }, '🗑️ הסר'),
+          el('div', { class: 'flex gap-2 mt-2.5' }, [
+            el('button', { class: 'text-sm px-3 py-1.5 rounded-full bg-violet-100 text-violet-800 font-extrabold border-2 border-ink active:scale-95 transition-transform', onclick: () => editMealIngredients(meal.id) }, '✏️ ערוך מתכון'),
+            el('button', { class: 'text-sm px-3 py-1.5 rounded-full bg-red-100 text-red-700 font-extrabold border-2 border-ink active:scale-95 transition-transform', onclick: () => deleteMeal(meal.id) }, '🗑️ הסר'),
           ]),
         ]);
         mealList.appendChild(card);
@@ -369,12 +371,12 @@ function editMealIngredients(id) {
 
   const rowsContainer = el('div', { id: 'ing-rows' });
   function addRow(ing = { name: '', quantity: 1, unit: 'יחידה' }) {
-    const nameInput = el('input', { type: 'text', value: ing.name, placeholder: 'שם רכיב', class: 'flex-1 border border-gray-200 rounded-lg px-2 py-1.5 min-w-0' });
-    const qtyInput = el('input', { type: 'number', step: '0.01', min: '0', value: ing.quantity, class: 'w-16 border border-gray-200 rounded-lg px-2 py-1.5' });
-    const unitSelect = el('select', { class: 'w-24 border rounded-lg px-1 py-1.5 text-sm' }, unitOptions(ing.unit));
+    const nameInput = el('input', { type: 'text', value: ing.name, placeholder: 'שם רכיב', class: 'flex-1 border-2 border-ink rounded-lg px-2 py-1.5 min-w-0 font-medium' });
+    const qtyInput = el('input', { type: 'number', step: '0.01', min: '0', value: ing.quantity, class: 'w-16 border-2 border-ink rounded-lg px-2 py-1.5 font-medium' });
+    const unitSelect = el('select', { class: 'w-24 border-2 border-ink rounded-lg px-1 py-1.5 text-sm font-medium' }, unitOptions(ing.unit));
     const row = el('div', { class: 'flex items-center gap-1.5 mb-2', 'data-row': '1' }, [
       nameInput, qtyInput, unitSelect,
-      el('button', { type: 'button', class: 'text-red-500 px-2', onclick: () => row.remove() }, '✕'),
+      el('button', { type: 'button', class: 'text-red-500 font-black px-2', onclick: () => row.remove() }, '✕'),
     ]);
     row._read = () => ({ name: nameInput.value.trim(), quantity: parseFloat(qtyInput.value) || 0, unit: unitSelect.value });
     rowsContainer.appendChild(row);
@@ -383,11 +385,11 @@ function editMealIngredients(id) {
   if (meal.ingredients.length === 0) addRow();
 
   const form = el('form', {}, [
-    el('h2', { class: 'text-lg font-bold mb-1 text-gray-800', text: meal.name }),
-    el('p', { class: 'text-sm text-gray-500 mb-3' }, 'רכיבים למתכון (ל-4 מנות)'),
+    el('h2', { class: 'text-lg font-black mb-1', text: meal.name }),
+    el('p', { class: 'text-sm font-semibold text-ink/60 mb-3' }, 'רכיבים למתכון (ל-4 מנות)'),
     rowsContainer,
-    el('button', { type: 'button', class: 'text-sm text-fuchsia-600 font-semibold mb-4', onclick: () => addRow() }, '+ הוסף רכיב'),
-    el('button', { type: 'submit', class: 'w-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-full py-2.5 font-bold shadow-md shadow-pink-200 active:scale-95 transition-transform' }, 'שמור מתכון'),
+    el('button', { type: 'button', class: 'text-sm text-violet-700 font-extrabold mb-4', onclick: () => addRow() }, '+ הוסף רכיב'),
+    el('button', { type: 'submit', class: 'w-full bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all' }, 'שמור מתכון'),
   ]);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -495,27 +497,27 @@ function renderWeeklyGrid() {
     const isToday = dates[i].toDateString() === today.toDateString();
     const dayMeals = state.meals.filter((m) => m.day === i);
     const card = el('div', {
-      class: `fade-in-item bg-white rounded-2xl border ${isToday ? 'border-pink-300 ring-2 ring-pink-100' : 'border-pink-100'} shadow-sm p-3`,
+      class: `fade-in-item bg-white rounded-2xl border-[2.5px] border-ink shadow-[4px_4px_0_#1a1523] p-3 ${isToday ? 'ring-[3px] ring-pink-400 ring-offset-2 ring-offset-cream' : ''}`,
     }, [
       el('div', { class: 'flex items-center justify-between mb-2' }, [
         el('div', { class: 'flex items-center gap-1.5' }, [
-          el('span', { class: 'font-bold text-gray-800' }, name),
-          isToday ? el('span', { class: 'text-[10px] bg-pink-500 text-white rounded-full px-1.5 py-0.5 font-bold' }, 'היום') : null,
+          el('span', { class: 'font-black' }, name),
+          isToday ? el('span', { class: 'text-[10px] bg-pink-500 text-white border-2 border-ink rounded-full px-1.5 py-0.5 font-extrabold' }, 'היום') : null,
         ]),
-        el('span', { class: 'text-xs text-gray-400' }, `${dates[i].getDate()}.${dates[i].getMonth() + 1}`),
+        el('span', { class: 'text-xs font-bold text-ink/40' }, `${dates[i].getDate()}.${dates[i].getMonth() + 1}`),
       ]),
       el('div', { class: 'space-y-1.5' }, MEAL_TYPES.map((mt) => {
         const meals = dayMeals.filter((m) => m.mealType === mt.id);
         const label = meals.map((m) => m.name).join('، ') || 'הוסיפו ארוחה';
         return el('button', {
           type: 'button',
-          class: `w-full flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm text-right transition-colors ${meals.length ? `${mt.softBg}` : 'bg-gray-50 hover:bg-gray-100'}`,
+          class: `w-full flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm text-right border-2 transition-colors ${meals.length ? `${mt.softBg} border-ink/10` : 'bg-cream border-dashed border-ink/25 hover:border-ink/50'}`,
           onclick: () => goPlanEmptySlot(i, mt.id),
         }, [
           el('span', {}, mt.icon),
-          el('span', { class: `font-semibold ${mt.chipText} shrink-0` }, mt.label + ':'),
-          el('span', { class: `flex-1 min-w-0 truncate ${meals.length ? 'text-gray-700 font-medium' : 'text-gray-400'}` }, label),
-          !meals.length ? el('span', { class: 'text-pink-400 text-xs font-bold shrink-0' }, '+') : null,
+          el('span', { class: `font-extrabold ${mt.softText} shrink-0` }, mt.label + ':'),
+          el('span', { class: `flex-1 min-w-0 truncate font-semibold ${meals.length ? 'text-ink' : 'text-ink/35'}` }, label),
+          !meals.length ? el('span', { class: 'text-pink-500 text-sm font-black shrink-0' }, '+') : null,
         ]);
       })),
     ]);
@@ -527,10 +529,10 @@ function renderWeeklyGrid() {
   const noDay = state.meals.filter((m) => m.day === null || m.day === undefined);
   if (noDay.length > 0) {
     weeklyGrid.insertAdjacentElement('afterend', el('div', { id: 'no-day-section', class: 'fade-in-item mt-1' }, [
-      el('div', { class: 'text-sm font-semibold text-gray-500 mb-1.5' }, '🗓️ ללא יום קבוע'),
+      el('div', { class: 'text-sm font-black text-ink/60 mb-1.5' }, '🗓️ ללא יום קבוע'),
       el('div', { class: 'flex flex-wrap gap-1.5' }, noDay.map((m) => {
         const mt = MEAL_TYPE_BY_ID[m.mealType];
-        return el('span', { class: `text-xs ${mt.chipBg} ${mt.chipText} rounded-full px-2.5 py-1 font-medium` }, `${mt.icon} ${m.name}`);
+        return el('span', { class: `text-xs ${mt.chipBg} ${mt.chipText} border-2 border-ink rounded-full px-2.5 py-1 font-bold` }, `${mt.icon} ${m.name}`);
       })),
     ]));
   }
@@ -605,20 +607,20 @@ function renderShopping() {
   CATEGORIES.forEach((cat) => {
     const items = grouped[cat.id];
     if (!items || items.length === 0) return;
-    shoppingList.appendChild(el('h3', { class: 'px-1 pt-3 pb-1 text-sm font-semibold text-gray-500 first:pt-0' }, `${cat.icon} ${cat.label}`));
+    shoppingList.appendChild(el('h3', { class: 'px-1 pt-4 pb-1.5 text-sm font-black text-ink/70 first:pt-0' }, `${cat.icon} ${cat.label}`));
     items
       .sort((a, b) => (state.bought[a.key] ? 1 : 0) - (state.bought[b.key] ? 1 : 0))
       .forEach((item) => {
         const bought = !!state.bought[item.key];
-        const row = el('label', { class: `fade-in-item flex items-center gap-2 bg-white rounded-2xl px-3 py-2 mb-2 shadow-sm border border-pink-100/70 ${bought ? 'opacity-50' : ''}` }, [
+        const row = el('label', { class: `fade-in-item flex items-center gap-2 bg-white rounded-xl px-3 py-2 mb-2 border-[2.5px] border-ink shadow-[3px_3px_0_#1a1523] ${bought ? 'opacity-40' : ''}` }, [
           el('input', {
             type: 'checkbox', class: 'check-pop w-5 h-5 accent-pink-500 shrink-0', ...(bought ? { checked: 'checked' } : {}),
             onchange: (e) => { state.bought[item.key] = e.target.checked; persistBought(); renderShopping(); },
           }),
           el('div', { class: 'flex-1 min-w-0' }, [
-            el('div', { class: `font-medium text-gray-800 truncate ${bought ? 'line-through' : ''}`, text: item.name }),
+            el('div', { class: `font-bold text-ink truncate ${bought ? 'line-through' : ''}`, text: item.name }),
           ]),
-          el('div', { class: 'text-sm text-gray-500 shrink-0', text: `${fmtQty(item.quantity)} ${UNIT_BY_ID[item.unit]?.label ?? item.unit}` }),
+          el('div', { class: 'text-sm font-extrabold text-ink/50 shrink-0', text: `${fmtQty(item.quantity)} ${UNIT_BY_ID[item.unit]?.label ?? item.unit}` }),
         ]);
         shoppingList.appendChild(row);
       });
@@ -626,11 +628,11 @@ function renderShopping() {
 
   shoppingSatisfied.innerHTML = '';
   if (satisfied.length > 0) {
-    shoppingSatisfied.appendChild(el('details', { class: 'fade-in-item mt-3' }, [
-      el('summary', { class: 'text-sm font-medium text-emerald-700 cursor-pointer' }, `✅ יש לכם מספיק בבית (${satisfied.length})`),
-      el('div', { class: 'mt-2' }, satisfied.map((item) => el('div', { class: 'text-sm text-gray-600 py-1 flex justify-between' }, [
+    shoppingSatisfied.appendChild(el('details', { class: 'fade-in-item mt-3 bg-lime-100 border-[2.5px] border-ink rounded-xl px-3 py-2' }, [
+      el('summary', { class: 'text-sm font-extrabold text-lime-900 cursor-pointer' }, `✅ יש לכם מספיק בבית (${satisfied.length})`),
+      el('div', { class: 'mt-2' }, satisfied.map((item) => el('div', { class: 'text-sm font-semibold text-lime-900/70 py-1 flex justify-between' }, [
         el('span', {}, item.name),
-        el('span', { class: 'text-gray-400' }, `${fmtQty(item.quantity)} ${UNIT_BY_ID[item.unit]?.label ?? item.unit}`),
+        el('span', {}, `${fmtQty(item.quantity)} ${UNIT_BY_ID[item.unit]?.label ?? item.unit}`),
       ]))),
     ]));
   }
@@ -697,13 +699,13 @@ $('#new-week-btn').addEventListener('click', () => {
 // Custom recipe creation
 // ---------------------------------------------------------------------
 $('#add-custom-recipe-btn').addEventListener('click', () => {
-  const nameHe = el('input', { type: 'text', placeholder: 'שם המתכון בעברית', class: 'w-full border border-gray-200 rounded-xl px-3 py-2 mb-3' });
-  const nameEn = el('input', { type: 'text', placeholder: 'Recipe name in English (optional)', class: 'w-full border border-gray-200 rounded-xl px-3 py-2 mb-3' });
+  const nameHe = el('input', { type: 'text', placeholder: 'שם המתכון בעברית', class: 'w-full border-2 border-ink rounded-xl px-3 py-2 mb-3 font-medium' });
+  const nameEn = el('input', { type: 'text', placeholder: 'Recipe name in English (optional)', class: 'w-full border-2 border-ink rounded-xl px-3 py-2 mb-3 font-medium' });
   const form = el('form', {}, [
-    el('h2', { class: 'text-lg font-bold mb-4 text-gray-800' }, '✨ מתכון חדש'),
+    el('h2', { class: 'text-lg font-black mb-4' }, '✨ מתכון חדש'),
     nameHe, nameEn,
-    el('p', { class: 'text-xs text-gray-500 mb-3' }, 'בשלב הבא תוכלו להוסיף לו רכיבים.'),
-    el('button', { type: 'submit', class: 'w-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-full py-2.5 font-bold shadow-md shadow-pink-200 active:scale-95 transition-transform' }, 'המשך להוספת רכיבים ←'),
+    el('p', { class: 'text-xs font-semibold text-ink/50 mb-3' }, 'בשלב הבא תוכלו להוסיף לו רכיבים.'),
+    el('button', { type: 'submit', class: 'w-full bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all' }, 'המשך להוספת רכיבים ←'),
   ]);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
