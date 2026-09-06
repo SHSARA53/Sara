@@ -168,7 +168,22 @@ test.describe('pantry-based suggestions', () => {
     await expect(page.locator('#meal-list')).toContainText('שני');
   });
 
+  test('basic staples (salt, oil, cumin...) are assumed present and do not block a full match', async ({ page }) => {
+    // מג'דרה needs עדשים/אורז/בצל plus שמן+כמון+מלח (all staples) - only the
+    // first three are added, and it should still show as a full match.
+    await addPantry(page, 'עדשים', 2, 'כוס');
+    await addPantry(page, 'אורז', 1, 'כוס');
+    await addPantry(page, 'בצל', 3, 'יחידה');
+
+    await page.click('#pantry-suggest-btn');
+    const row = page.locator('#modal-body label', { hasText: 'עדשים עם אורז' }).first();
+    await expect(row).toContainText('יש לכם הכל');
+  });
+
   test('an empty pantry shows a toast instead of an empty modal', async ({ page }) => {
+    // Regression: assumed staples (salt, oil...) must not be enough on
+    // their own to "match" a recipe - a genuinely empty pantry should never
+    // produce suggestions, even for a recipe made mostly of staples.
     await page.click('#pantry-suggest-btn');
     await expect(page.locator('#modal-overlay')).toBeHidden();
     await expect(page.locator('#toast')).toHaveClass(/toast-show/);

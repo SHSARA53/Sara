@@ -3,7 +3,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  CATEGORIES, UNITS, MEAL_TYPES, RECIPES,
+  CATEGORIES, UNITS, MEAL_TYPES, RECIPES, ASSUMED_STAPLES,
   normalize, guessCategory, findRecipe, convert, pickDefaultMealType,
 } from '../../js/recipes.js';
 
@@ -128,5 +128,25 @@ describe('findRecipe()', () => {
 describe('pickDefaultMealType()', () => {
   test('always returns one of the three known meal types', () => {
     assert.ok(MEAL_TYPE_IDS.has(pickDefaultMealType()));
+  });
+});
+
+describe('ASSUMED_STAPLES', () => {
+  test('contains common basics like salt and oil', () => {
+    assert.ok(ASSUMED_STAPLES.has('מלח'));
+    assert.ok(ASSUMED_STAPLES.has('שמן זית'));
+    assert.ok(ASSUMED_STAPLES.has('כמון'));
+  });
+  test('excludes "special" spices/oils that aren\'t universally on hand', () => {
+    assert.ok(!ASSUMED_STAPLES.has('אבקת קארי'));
+    assert.ok(!ASSUMED_STAPLES.has('פפריקה חריפה'));
+    assert.ok(!ASSUMED_STAPLES.has('שמן שומשום'));
+    assert.ok(!ASSUMED_STAPLES.has('טחינה גולמית'));
+  });
+  test('every staple name is a real ingredient used somewhere in the recipe book', () => {
+    const allIngredientNames = new Set(RECIPES.flatMap((r) => r.ingredients.map((i) => i.name)));
+    for (const staple of ASSUMED_STAPLES) {
+      assert.ok(allIngredientNames.has(staple), `"${staple}" is a staple but no recipe uses that exact name`);
+    }
   });
 });

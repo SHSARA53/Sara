@@ -117,6 +117,19 @@ export const INGREDIENT_CATEGORY_MAP = {
   'שמן זית': 'oils', 'שמן': 'oils', 'שמן שומשום': 'oils', 'שמן לטיגון': 'oils',
 };
 
+// Basic staples nearly every kitchen already has, used only by the "what can
+// I make from my pantry?" suggestion matcher: a recipe isn't marked "missing
+// something" just because the user never bothered to log that they own
+// salt. Deliberately excludes less-universal/"special" spices and oils
+// (curry powder, hot paprika, tahini, ground coriander, nutmeg, rosemary,
+// sesame oil...) - those still have to actually be in the pantry to count.
+// The real shopping list is unaffected - it still lists these if truly
+// missing, since forgetting salt on a shopping trip is a real problem.
+export const ASSUMED_STAPLES = new Set([
+  'מלח', 'פלפל שחור', 'אורגנו', 'כמון', 'פפריקה', 'כורכום', 'קינמון',
+  'סוכר', 'אבקת אפייה', 'שמן', 'שמן זית', 'שמן לטיגון',
+]);
+
 export function normalize(text) {
   return (text || '')
     .toString()

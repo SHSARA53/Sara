@@ -1,6 +1,6 @@
 import {
   CATEGORIES, CATEGORY_BY_ID, UNITS, UNIT_BY_ID, RECIPES,
-  MEAL_TYPES, MEAL_TYPE_BY_ID, pickDefaultMealType,
+  MEAL_TYPES, MEAL_TYPE_BY_ID, pickDefaultMealType, ASSUMED_STAPLES,
   normalize, guessCategory, findRecipe, convert,
 } from './recipes.js';
 import { store, uid } from './storage.js';
@@ -772,8 +772,9 @@ $('#add-custom-recipe-btn').addEventListener('click', () => {
 // by what's in the pantry right now.
 function computePantryMatch(recipe) {
   const results = recipe.ingredients.map((ing) => {
+    if (ASSUMED_STAPLES.has(normalize(ing.name))) return { name: ing.name, covered: true, isStaple: true };
     const unitInfo = UNIT_BY_ID[ing.unit];
-    if (!unitInfo) return { name: ing.name, covered: false };
+    if (!unitInfo) return { name: ing.name, covered: false, isStaple: false };
     const key = normalize(ing.name);
     let have = 0;
     state.pantry.forEach((p) => {
@@ -782,18 +783,23 @@ function computePantryMatch(recipe) {
       if (!pUnitInfo || pUnitInfo.kind !== unitInfo.kind) return;
       have += convert(p.quantity, p.unit, ing.unit) ?? 0;
     });
-    return { name: ing.name, covered: have >= ing.quantity - 0.001 };
+    return { name: ing.name, covered: have >= ing.quantity - 0.001, isStaple: false };
   });
   const total = results.length;
   const covered = results.filter((r) => r.covered).length;
+  // Staples alone can't qualify a recipe as a suggestion - at least one
+  // ingredient must be covered by something the user actually logged,
+  // otherwise a pantry with nothing in it could still "match" a recipe
+  // that happens to be made mostly of assumed staples.
+  const coveredFromPantry = results.filter((r) => r.covered && !r.isStaple).length;
   const missing = results.filter((r) => !r.covered).map((r) => r.name);
-  return { total, covered, missing, ratio: total ? covered / total : 0 };
+  return { total, covered, coveredFromPantry, missing, ratio: total ? covered / total : 0 };
 }
 
 function getPantrySuggestions() {
   return allRecipes()
     .map((recipe) => ({ recipe, match: computePantryMatch(recipe) }))
-    .filter((s) => s.match.covered > 0 && s.match.ratio >= 0.34)
+    .filter((s) => s.match.coveredFromPantry > 0 && s.match.ratio >= 0.34)
     .sort((a, b) => b.match.ratio - a.match.ratio || b.match.covered - a.match.covered)
     .slice(0, 20);
 }
