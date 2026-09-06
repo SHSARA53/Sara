@@ -1,0 +1,39 @@
+/* Small overrides beyond what Tailwind's utility classes cover. */
+
+html, body {
+  font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+}
+
+/* Keep native tap highlight subtle and inputs comfortable on mobile. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: 16px; /* prevents iOS Safari auto-zoom on focus */
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #fdba74;
+  border-radius: 999px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Respect the safe area on notched phones for the fixed bottom nav. */
+nav {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
