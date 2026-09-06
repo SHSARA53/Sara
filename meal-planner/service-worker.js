@@ -3,7 +3,7 @@
 // everything else (including the Tailwind/Google Fonts CDN assets) so the
 // app keeps working with no network at all after the first successful load.
 
-const CACHE_VERSION = 'meal-planner-v1';
+const CACHE_VERSION = 'meal-planner-v2';
 const APP_SHELL = [
   './',
   './index.html',

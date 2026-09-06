@@ -62,11 +62,16 @@ function encodePNG(width, height, rgba) {
 
 // --- Icon drawing -----------------------------------------------------
 
-const BG = [249, 115, 22]; // orange-500
+const GRAD_TOP = [236, 72, 153]; // pink-500
+const GRAD_BOTTOM = [168, 85, 247]; // purple-500
 const WHITE = [255, 255, 255];
-const GREEN = [22, 163, 74];
-const RED = [220, 38, 38];
-const OUTLINE = [194, 84, 9];
+const ROSE = [251, 113, 133]; // rose-400 produce dot
+const VIOLET = [216, 180, 254]; // purple-300 produce dot
+const OUTLINE = [190, 60, 130];
+
+function bgColorAt(v) {
+  return mix(GRAD_TOP, GRAD_BOTTOM, Math.min(Math.max(v, 0), 1));
+}
 
 function mix(base, color, alpha) {
   return [
@@ -116,8 +121,8 @@ function basketPixel(u, v) {
     return { color: WHITE, alpha: 1 };
   }
   // Two "produce" circles peeking over the basket rim.
-  if (inCircle(u, v, 0.40, 0.385, 0.075)) return { color: GREEN, alpha: 1 };
-  if (inCircle(u, v, 0.60, 0.385, 0.075)) return { color: RED, alpha: 1 };
+  if (inCircle(u, v, 0.40, 0.385, 0.075)) return { color: ROSE, alpha: 1 };
+  if (inCircle(u, v, 0.60, 0.385, 0.075)) return { color: VIOLET, alpha: 1 };
   return null;
 }
 
@@ -142,7 +147,7 @@ function renderIcon({ size, rounded, fullBleed }) {
         }
       }
 
-      let color = BG;
+      let color = bgColorAt(y / size);
       // Normalized coords; for full-bleed (maskable) icons keep the artwork
       // inside the ~80% safe zone so OS masks don't clip it.
       const scale = fullBleed ? 0.78 : 1;
@@ -152,7 +157,7 @@ function renderIcon({ size, rounded, fullBleed }) {
 
       if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
         const px = basketPixel(u, v);
-        if (px) color = mix(BG, px.color, px.alpha);
+        if (px) color = mix(color, px.color, px.alpha);
       }
 
       rgba[idx] = color[0];

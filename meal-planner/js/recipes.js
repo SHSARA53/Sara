@@ -18,6 +18,36 @@ export const CATEGORIES = [
 
 export const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 
+// The three daily meal slots the planner is built around. Colors are full
+// literal Tailwind class names (not built with string interpolation) so
+// the CSS build's content scanner can find and include them.
+export const MEAL_TYPES = [
+  {
+    id: 'breakfast', label: 'בוקר', icon: '🌅',
+    chipBg: 'bg-amber-100', chipText: 'text-amber-700', chipRing: 'ring-amber-300',
+    solidBg: 'bg-amber-400', softBg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-400',
+  },
+  {
+    id: 'lunch', label: 'צהריים', icon: '☀️',
+    chipBg: 'bg-emerald-100', chipText: 'text-emerald-700', chipRing: 'ring-emerald-300',
+    solidBg: 'bg-emerald-400', softBg: 'bg-emerald-50', border: 'border-emerald-200', dot: 'bg-emerald-400',
+  },
+  {
+    id: 'dinner', label: 'ערב', icon: '🌙',
+    chipBg: 'bg-indigo-100', chipText: 'text-indigo-700', chipRing: 'ring-indigo-300',
+    solidBg: 'bg-indigo-400', softBg: 'bg-indigo-50', border: 'border-indigo-200', dot: 'bg-indigo-400',
+  },
+];
+
+export const MEAL_TYPE_BY_ID = Object.fromEntries(MEAL_TYPES.map((m) => [m.id, m]));
+
+export function pickDefaultMealType() {
+  const hour = new Date().getHours();
+  if (hour < 11) return 'breakfast';
+  if (hour < 16) return 'lunch';
+  return 'dinner';
+}
+
 // Unit metadata used for aggregation + pantry-vs-recipe comparisons.
 // Units of the same "kind" convert into one another via `toBase`; units of
 // different kinds are never merged (e.g. grams never satisfy "יחידה").
@@ -59,7 +89,8 @@ export const INGREDIENT_CATEGORY_MAP = {
   'פלפל ירוק': 'produce', 'פלפל צבעוני': 'produce', 'סלרי': 'produce', 'דלעת': 'produce',
   'לימון': 'produce', 'פטרוזיליה': 'produce', 'כוסברה': 'produce', 'שמיר': 'produce',
   'בזיליקום': 'produce', "פטרוזיליה שורש": 'produce', 'תירס': 'produce', 'ג\'ינג\'ר': 'produce',
-  'תירס מתוק': 'produce', 'חסה': 'produce', 'אפונה': 'produce',
+  'תירס מתוק': 'produce', 'חסה': 'produce', 'אפונה': 'produce', 'בננה': 'produce',
+  'תותים': 'produce', 'תרד': 'produce',
 
   'בשר טחון': 'meat', 'חזה עוף': 'meat', 'שוקי עוף': 'meat', 'עוף שלם': 'meat',
   'חלקי עוף': 'meat', 'כרעיים עוף': 'meat', 'בשר בקר': 'meat', 'כתף בקר': 'meat',
@@ -72,10 +103,10 @@ export const INGREDIENT_CATEGORY_MAP = {
 
   'פסטה': 'dry', 'אורז': 'dry', 'קמח': 'dry', 'עדשים': 'dry', 'גרגירי חומוס': 'dry',
   'חומוס יבש': 'dry', 'טחינה גולמית': 'dry', 'פירורי לחם': 'dry', 'שמרים יבשים': 'dry',
-  'אבקת אפייה': 'dry', 'סוכר': 'dry', 'קוסקוס': 'dry', 'בורגול': 'dry',
+  'אבקת אפייה': 'dry', 'סוכר': 'dry', 'קוסקוס': 'dry', 'בורגול': 'dry', 'גרנולה': 'dry',
 
   'רסק עגבניות': 'canned', 'עגבניות מרוסקות': 'canned', 'זיתי קלמטה': 'canned',
-  'רוטב סויה': 'canned', 'דבש': 'canned',
+  'רוטב סויה': 'canned', 'דבש': 'canned', 'מיונז': 'canned',
 
   'מלח': 'spices', 'פלפל שחור': 'spices', 'אורגנו': 'spices', 'כמון': 'spices',
   'פפריקה': 'spices', 'כוסברה טחונה': 'spices', 'אגוז מוסקט': 'spices', 'שומשום': 'spices',
@@ -105,10 +136,54 @@ function ing(name, quantity, unit) {
   return { name, quantity, unit, category: guessCategory(name) };
 }
 
-// 20 built-in recipes, ingredient quantities scaled for 4 servings.
+// 26 built-in recipes, ingredient quantities scaled for 4 servings.
 export const RECIPES = [
   {
-    id: 'bolognese', nameHe: 'פסטה בולונז', nameEn: 'Pasta Bolognese', servings: 4,
+    id: 'omelette', nameHe: 'חביתת ירקות', nameEn: 'Vegetable Omelette', servings: 4, mealTypes: ['breakfast'],
+    ingredients: [
+      ing('ביצים', 8, 'יחידה'), ing('עגבניות', 1, 'יחידה'), ing('בצל ירוק', 2, 'יחידה'),
+      ing('גבינה צהובה', 100, 'גרם'), ing('מלח', 1, 'כפית'), ing('פלפל שחור', 1, 'כפית'),
+      ing('שמן זית', 1, 'כף'),
+    ],
+  },
+  {
+    id: 'pancakes', nameHe: 'פנקייקים מתוקים', nameEn: 'Sweet Pancakes', servings: 4, mealTypes: ['breakfast'],
+    ingredients: [
+      ing('קמח', 1.5, 'כוס'), ing('ביצים', 2, 'יחידה'), ing('חלב', 1, 'כוס'),
+      ing('סוכר', 2, 'כף'), ing('אבקת אפייה', 1, 'כפית'), ing('חמאה', 2, 'כף'),
+      ing('דבש', 2, 'כף'),
+    ],
+  },
+  {
+    id: 'yogurt-granola', nameHe: 'יוגורט עם גרנולה ופירות', nameEn: 'Yogurt with Granola & Fruit', servings: 4, mealTypes: ['breakfast'],
+    ingredients: [
+      ing('יוגורט', 4, 'יחידה'), ing('גרנולה', 1, 'כוס'), ing('דבש', 2, 'כף'),
+      ing('בננה', 2, 'יחידה'), ing('תותים', 1, 'כוס'),
+    ],
+  },
+  {
+    id: 'green-smoothie', nameHe: 'שייק פירות ירוק', nameEn: 'Green Fruit Smoothie', servings: 4, mealTypes: ['breakfast'],
+    ingredients: [
+      ing('בננה', 2, 'יחידה'), ing('תרד', 2, 'כוס'), ing('חלב', 2, 'כוס'),
+      ing('דבש', 1, 'כף'),
+    ],
+  },
+  {
+    id: 'cheese-sandwich', nameHe: 'כריך גבינה וירקות', nameEn: 'Cheese & Veggie Sandwich', servings: 4, mealTypes: ['breakfast', 'lunch'],
+    ingredients: [
+      ing('לחם', 8, 'פרוסה'), ing('גבינה צהובה', 8, 'פרוסה'), ing('עגבניות', 2, 'יחידה'),
+      ing('מלפפון', 2, 'יחידה'), ing('חמאה', 2, 'כף'),
+    ],
+  },
+  {
+    id: 'egg-salad', nameHe: 'סלט ביצים', nameEn: 'Egg Salad', servings: 4, mealTypes: ['breakfast', 'lunch'],
+    ingredients: [
+      ing('ביצים', 8, 'יחידה'), ing('מיונז', 4, 'כף'), ing('בצל ירוק', 2, 'יחידה'),
+      ing('מלח', 1, 'כפית'), ing('פלפל שחור', 1, 'כפית'), ing('לחם', 8, 'פרוסה'),
+    ],
+  },
+  {
+    id: 'bolognese', nameHe: 'פסטה בולונז', nameEn: 'Pasta Bolognese', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('פסטה', 400, 'גרם'), ing('בשר טחון', 500, 'גרם'), ing('בצל', 2, 'יחידה'),
       ing('שום', 3, 'שן'), ing('רסק עגבניות', 1, 'קופסה'), ing('עגבניות מרוסקות', 400, 'גרם'),
@@ -117,7 +192,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'schnitzel', nameHe: 'שניצל', nameEn: 'Schnitzel', servings: 4,
+    id: 'schnitzel', nameHe: 'שניצל', nameEn: 'Schnitzel', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('חזה עוף', 8, 'יחידה'), ing('ביצים', 3, 'יחידה'), ing('פירורי לחם', 2, 'כוס'),
       ing('קמח', 1, 'כוס'), ing('מלח', 1, 'כפית'), ing('פלפל שחור', 1, 'כפית'),
@@ -125,7 +200,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'hummus', nameHe: 'חומוס', nameEn: 'Hummus', servings: 4,
+    id: 'hummus', nameHe: 'חומוס', nameEn: 'Hummus', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('גרגירי חומוס', 500, 'גרם'), ing('טחינה גולמית', 1, 'כוס'), ing('לימון', 2, 'יחידה'),
       ing('שום', 3, 'שן'), ing('שמן זית', 3, 'כף'), ing('כמון', 1, 'כפית'), ing('מלח', 1, 'כפית'),
@@ -133,7 +208,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'chopped-salad', nameHe: 'סלט קצוץ ישראלי', nameEn: 'Israeli Chopped Salad', servings: 4,
+    id: 'chopped-salad', nameHe: 'סלט קצוץ ישראלי', nameEn: 'Israeli Chopped Salad', servings: 4, mealTypes: ['breakfast', 'lunch', 'dinner'],
     ingredients: [
       ing('עגבניות', 4, 'יחידה'), ing('מלפפונים', 4, 'יחידה'), ing('בצל סגול', 1, 'יחידה'),
       ing('פלפל צבעוני', 1, 'יחידה'), ing('לימון', 1, 'יחידה'), ing('שמן זית', 2, 'כף'),
@@ -141,7 +216,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'chicken-soup', nameHe: 'מרק עוף', nameEn: 'Chicken Soup', servings: 4,
+    id: 'chicken-soup', nameHe: 'מרק עוף', nameEn: 'Chicken Soup', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('חלקי עוף', 1, 'קג'), ing('גזר', 3, 'יחידה'), ing('סלרי', 3, 'גבעול'),
       ing('בצל', 2, 'יחידה'), ing('תפוחי אדמה', 3, 'יחידה'), ing('פטרוזיליה שורש', 1, 'יחידה'),
@@ -149,7 +224,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'alfredo', nameHe: 'פסטה אלפרדו', nameEn: 'Pasta Alfredo', servings: 4,
+    id: 'alfredo', nameHe: 'פסטה אלפרדו', nameEn: 'Pasta Alfredo', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('פסטה', 400, 'גרם'), ing('שמנת מתוקה', 500, 'מל'), ing('חמאה', 100, 'גרם'),
       ing('פרמזן', 100, 'גרם'), ing('שום', 2, 'שן'), ing('מלח', 1, 'כפית'),
@@ -157,7 +232,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'rice-vegetables', nameHe: 'אורז עם ירקות', nameEn: 'Rice with Vegetables', servings: 4,
+    id: 'rice-vegetables', nameHe: 'אורז עם ירקות', nameEn: 'Rice with Vegetables', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('אורז', 2, 'כוס'), ing('גזר', 2, 'יחידה'), ing('אפונה', 1, 'כוס'),
       ing('תירס', 1, 'כוס'), ing('בצל', 1, 'יחידה'), ing('שמן', 2, 'כף'),
@@ -165,7 +240,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'shakshuka', nameHe: 'שקשוקה', nameEn: 'Shakshuka', servings: 4,
+    id: 'shakshuka', nameHe: 'שקשוקה', nameEn: 'Shakshuka', servings: 4, mealTypes: ['breakfast', 'lunch'],
     ingredients: [
       ing('ביצים', 8, 'יחידה'), ing('עגבניות מרוסקות', 800, 'גרם'), ing('בצל', 1, 'יחידה'),
       ing('פלפל אדום', 1, 'יחידה'), ing('שום', 3, 'שן'), ing('פפריקה', 1, 'כפית'),
@@ -173,7 +248,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'roast-chicken', nameHe: 'עוף בתנור עם תפוחי אדמה', nameEn: 'Roast Chicken with Potatoes', servings: 4,
+    id: 'roast-chicken', nameHe: 'עוף בתנור עם תפוחי אדמה', nameEn: 'Roast Chicken with Potatoes', servings: 4, mealTypes: ['dinner'],
     ingredients: [
       ing('שוקי עוף', 8, 'יחידה'), ing('תפוחי אדמה', 6, 'יחידה'), ing('שום', 1, 'ראש'),
       ing('שמן זית', 3, 'כף'), ing('פפריקה', 1, 'כף'), ing('מלח', 1, 'כף'),
@@ -181,7 +256,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'meatballs', nameHe: 'קציצות בקר', nameEn: 'Beef Meatballs', servings: 4,
+    id: 'meatballs', nameHe: 'קציצות בקר', nameEn: 'Beef Meatballs', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('בשר טחון', 600, 'גרם'), ing('בצל', 1, 'יחידה'), ing('ביצים', 1, 'יחידה'),
       ing('פירורי לחם', 0.5, 'כוס'), ing('פטרוזיליה', 1, 'יחידה'), ing('מלח', 1, 'כפית'),
@@ -189,7 +264,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'pomodoro', nameHe: 'פסטה ברוטב עגבניות', nameEn: 'Pasta Pomodoro', servings: 4,
+    id: 'pomodoro', nameHe: 'פסטה ברוטב עגבניות', nameEn: 'Pasta Pomodoro', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('פסטה', 400, 'גרם'), ing('עגבניות מרוסקות', 800, 'גרם'), ing('שום', 3, 'שן'),
       ing('בזיליקום', 1, 'יחידה'), ing('שמן זית', 3, 'כף'), ing('מלח', 1, 'כפית'),
@@ -197,7 +272,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'vegetable-soup', nameHe: 'מרק ירקות', nameEn: 'Vegetable Soup', servings: 4,
+    id: 'vegetable-soup', nameHe: 'מרק ירקות', nameEn: 'Vegetable Soup', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('תפוחי אדמה', 2, 'יחידה'), ing('גזר', 3, 'יחידה'), ing('קישואים', 2, 'יחידה'),
       ing('בצל', 1, 'יחידה'), ing('סלרי', 2, 'גבעול'), ing('דלעת', 300, 'גרם'),
@@ -205,7 +280,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'soy-chicken', nameHe: 'עוף ברוטב סויה', nameEn: 'Soy Sauce Chicken', servings: 4,
+    id: 'soy-chicken', nameHe: 'עוף ברוטב סויה', nameEn: 'Soy Sauce Chicken', servings: 4, mealTypes: ['dinner'],
     ingredients: [
       ing('חזה עוף', 600, 'גרם'), ing('רוטב סויה', 0.5, 'כוס'), ing('דבש', 2, 'כף'),
       ing('שום', 3, 'שן'), ing("ג'ינג'ר", 1, 'יחידה'), ing('שמן שומשום', 1, 'כף'),
@@ -213,7 +288,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'greek-salad', nameHe: 'סלט יווני', nameEn: 'Greek Salad', servings: 4,
+    id: 'greek-salad', nameHe: 'סלט יווני', nameEn: 'Greek Salad', servings: 4, mealTypes: ['breakfast', 'lunch', 'dinner'],
     ingredients: [
       ing('עגבניות', 4, 'יחידה'), ing('מלפפון', 2, 'יחידה'), ing('פלפל ירוק', 1, 'יחידה'),
       ing('בצל סגול', 1, 'יחידה'), ing('זיתי קלמטה', 1, 'כוס'), ing('גבינה בולגרית', 200, 'גרם'),
@@ -221,7 +296,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'baked-salmon', nameHe: 'פילה סלמון בתנור', nameEn: 'Baked Salmon', servings: 4,
+    id: 'baked-salmon', nameHe: 'פילה סלמון בתנור', nameEn: 'Baked Salmon', servings: 4, mealTypes: ['dinner'],
     ingredients: [
       ing('פילה סלמון', 4, 'יחידה'), ing('לימון', 1, 'יחידה'), ing('שום', 2, 'שן'),
       ing('שמן זית', 2, 'כף'), ing('מלח', 1, 'כפית'), ing('פלפל שחור', 1, 'כפית'),
@@ -229,7 +304,7 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'vegetable-pashtida', nameHe: 'פשטידת ירקות', nameEn: 'Vegetable Pashtida (Quiche)', servings: 4,
+    id: 'vegetable-pashtida', nameHe: 'פשטידת ירקות', nameEn: 'Vegetable Pashtida (Quiche)', servings: 4, mealTypes: ['breakfast', 'lunch'],
     ingredients: [
       ing('קמח', 1.5, 'כוס'), ing('ביצים', 4, 'יחידה'), ing('שמן', 80, 'מל'),
       ing('אבקת אפייה', 1, 'כפית'), ing('קישואים', 2, 'יחידה'), ing('גזר', 1, 'יחידה'),
@@ -237,14 +312,14 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'lentil-stew', nameHe: 'עדשים עם אורז (מג׳דרה)', nameEn: 'Lentils with Rice (Mujadara)', servings: 4,
+    id: 'lentil-stew', nameHe: 'עדשים עם אורז (מג׳דרה)', nameEn: 'Lentils with Rice (Mujadara)', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('עדשים', 2, 'כוס'), ing('אורז', 1, 'כוס'), ing('בצל', 3, 'יחידה'),
       ing('שמן', 4, 'כף'), ing('כמון', 1, 'כפית'), ing('מלח', 1, 'כפית'),
     ],
   },
   {
-    id: 'falafel', nameHe: 'פלאפל', nameEn: 'Falafel', servings: 4,
+    id: 'falafel', nameHe: 'פלאפל', nameEn: 'Falafel', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('חומוס יבש', 500, 'גרם'), ing('בצל', 1, 'יחידה'), ing('שום', 4, 'שן'),
       ing('פטרוזיליה', 1, 'יחידה'), ing('כוסברה', 1, 'יחידה'), ing('כמון', 1, 'כף'),
@@ -252,13 +327,13 @@ export const RECIPES = [
     ],
   },
   {
-    id: 'grilled-cheese', nameHe: 'טוסט גבינה', nameEn: 'Grilled Cheese Toast', servings: 4,
+    id: 'grilled-cheese', nameHe: 'טוסט גבינה', nameEn: 'Grilled Cheese Toast', servings: 4, mealTypes: ['breakfast', 'lunch'],
     ingredients: [
       ing('לחם טוסט', 8, 'פרוסה'), ing('גבינה צהובה', 8, 'פרוסה'), ing('חמאה', 2, 'כף'),
     ],
   },
   {
-    id: 'pizza', nameHe: 'פיצה ביתית', nameEn: 'Homemade Pizza', servings: 4,
+    id: 'pizza', nameHe: 'פיצה ביתית', nameEn: 'Homemade Pizza', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('קמח', 500, 'גרם'), ing('שמרים יבשים', 1, 'שקית'), ing('שמן זית', 2, 'כף'),
       ing('רסק עגבניות', 1, 'קופסה'), ing('מוצרלה', 400, 'גרם'), ing('אורגנו', 1, 'כפית'),
