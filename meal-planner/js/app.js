@@ -32,6 +32,10 @@ function findAnyRecipe(name) {
   return allRecipes().find((r) => normalize(r.nameHe) === key || normalize(r.nameEn) === key) || findRecipe(name);
 }
 
+function findRecipeById(id) {
+  return allRecipes().find((r) => r.id === id) || null;
+}
+
 function persistPantry() { store.setPantry(state.pantry); }
 function persistMeals() { store.setMeals(state.meals); }
 function persistBought() { store.setBought(state.bought); }
@@ -328,15 +332,17 @@ function renderMealPlanning() {
       }, `${mt.icon} ${mt.label}`));
 
       meals.forEach((meal) => {
-        const recipe = meal.recipeId ? findAnyRecipe(meal.recipeId) : null;
-        const isCustomUnmatched = !meal.recipeId && meal.ingredients.length === 0;
+        const recipe = meal.recipeId ? findRecipeById(meal.recipeId) : null;
+        const isCustomUnmatched = meal.ingredients.length === 0;
         const card = el('div', { class: `fade-in-item bg-white rounded-2xl px-3 py-3 mb-2 shadow-sm border-r-4 ${mt.border} border border-gray-100` }, [
           el('div', { class: 'flex items-start justify-between gap-2' }, [
             el('div', { class: 'min-w-0' }, [
               el('div', { class: 'font-semibold text-gray-800 truncate', text: meal.name }),
               recipe?.nameEn ? el('div', { class: 'text-xs text-gray-400', text: recipe.nameEn }) : null,
               el('div', { class: 'text-xs text-gray-500 mt-1', text: `${meal.ingredients.length} רכיבים` }),
-              isCustomUnmatched ? el('div', { class: 'text-xs text-amber-600 mt-1', text: '⚠️ מתכון לא נמצא – הוסיפו רכיבים ידנית' }) : null,
+              isCustomUnmatched
+                ? el('div', { class: 'text-xs text-amber-600 mt-1', text: meal.recipeId ? '⚠️ עדיין אין רכיבים - לחצו על "ערוך מתכון"' : '⚠️ מתכון לא נמצא – הוסיפו רכיבים ידנית' })
+                : null,
             ]),
             el('div', { class: 'flex flex-col items-end gap-1 shrink-0' }, [mealTypeSelect(meal), daySelect(meal)]),
           ]),
@@ -388,8 +394,23 @@ function editMealIngredients(id) {
     const rows = $$('[data-row]', rowsContainer).map((r) => r._read()).filter((r) => r.name);
     meal.ingredients = rows.map((r) => ({ ...r, category: guessCategory(r.name) }));
     persistMeals();
+
+    // A custom recipe starts out with no ingredients of its own; the first
+    // time someone fills them in for a planned meal, save them back onto
+    // the recipe template too, so choosing this dish again next time comes
+    // pre-filled instead of starting from a blank list again.
+    if (meal.recipeId) {
+      const customRecipe = state.customRecipes.find((r) => r.id === meal.recipeId);
+      if (customRecipe && customRecipe.ingredients.length === 0 && meal.ingredients.length > 0) {
+        customRecipe.ingredients = meal.ingredients.map((i) => ({ ...i }));
+        store.setCustomRecipes(state.customRecipes);
+      }
+    }
+
     renderMealPlanning();
+    renderShopping();
     closeModal();
+    showToast(`✅ הרכיבים ל${meal.name} נשמרו`);
   });
   openModal(form);
 }
@@ -426,8 +447,11 @@ mealForm.addEventListener('submit', (e) => {
   renderMealTypeChips();
   populateRecipeSuggestions();
 
-  if (!recipe) {
-    // Unknown dish - immediately invite the user to define its ingredients.
+  if (meal.ingredients.length === 0) {
+    // No known ingredients yet - either an unrecognized dish, or a custom
+    // recipe that hasn't had its ingredients filled in yet. Either way,
+    // invite the user to define them right now instead of silently adding
+    // an empty meal that can't contribute to the shopping list.
     editMealIngredients(meal.id);
   }
 });
@@ -568,7 +592,12 @@ function renderShopping() {
   Object.keys(state.bought).forEach((k) => { if (!validKeys.has(k)) delete state.bought[k]; });
   persistBought();
 
-  shoppingEmpty.classList.toggle('hidden', state.meals.length > 0);
+  const noMealsYet = state.meals.length === 0;
+  const noIngredientsYet = !noMealsYet && missing.length === 0 && satisfied.length === 0;
+  shoppingEmpty.classList.toggle('hidden', !noMealsYet && !noIngredientsYet);
+  shoppingEmpty.textContent = noIngredientsYet
+    ? '⚠️ לארוחות שתכננתם עדיין אין רכיבים. פתחו "ערוך מתכון" בלשונית תכנון והוסיפו רכיבים.'
+    : 'אין עדיין רשימת קניות. הוסיפו ארוחות בלשונית "תכנון" 👈';
   shoppingSummary.textContent = `${state.meals.length} ארוחות מתוכננות · ${missing.length} פריטים לקנייה`;
 
   shoppingList.innerHTML = '';
@@ -673,8 +702,8 @@ $('#add-custom-recipe-btn').addEventListener('click', () => {
   const form = el('form', {}, [
     el('h2', { class: 'text-lg font-bold mb-4 text-gray-800' }, '✨ מתכון חדש'),
     nameHe, nameEn,
-    el('p', { class: 'text-xs text-gray-500 mb-3' }, 'לאחר היצירה תוכלו להוסיף רכיבים דרך "ערוך מתכון".'),
-    el('button', { type: 'submit', class: 'w-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-full py-2.5 font-bold shadow-md shadow-pink-200 active:scale-95 transition-transform' }, 'צור מתכון'),
+    el('p', { class: 'text-xs text-gray-500 mb-3' }, 'בשלב הבא תוכלו להוסיף לו רכיבים.'),
+    el('button', { type: 'submit', class: 'w-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-full py-2.5 font-bold shadow-md shadow-pink-200 active:scale-95 transition-transform' }, 'המשך להוספת רכיבים ←'),
   ]);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -687,10 +716,20 @@ $('#add-custom-recipe-btn').addEventListener('click', () => {
     store.setCustomRecipes(state.customRecipes);
     populateRecipeSuggestions();
     populatePantrySuggestions();
-    closeModal();
-    $('#meal-name').value = he;
-    $('#meal-name').focus();
-    showToast('✨ המתכון נוצר - עכשיו הוסיפו רכיבים');
+
+    // Plan it for whichever slot is currently selected and go straight into
+    // the ingredient editor - no dead-end where the recipe exists but
+    // nothing was actually added to the week yet.
+    const meal = {
+      id: uid(), name: recipe.nameHe, recipeId: recipe.id,
+      mealType: mealFormState.mealType, day: mealFormState.day, ingredients: [],
+    };
+    state.meals.push(meal);
+    persistMeals();
+    renderMealPlanning();
+    const mt = MEAL_TYPE_BY_ID[meal.mealType];
+    showToast(`${mt.icon} ${meal.name} נוסף ל${mt.label} - הוסיפו רכיבים`);
+    editMealIngredients(meal.id); // replaces this modal's content directly
   });
   openModal(form);
 });
