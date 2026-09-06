@@ -1,0 +1,15 @@
+{
+  "name": "meal-planner-tests",
+  "private": true,
+  "type": "module",
+  "description": "Test tooling only - the app itself ships as plain static files with no build step. See README.md.",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "serve": "^14.2.0"
+  }
+}
