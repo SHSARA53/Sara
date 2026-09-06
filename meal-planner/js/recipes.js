@@ -237,7 +237,7 @@ export const RECIPES = [
       ing('פסטה', 400, 'גרם'), ing('בשר טחון', 500, 'גרם'), ing('בצל', 2, 'יחידה'),
       ing('שום', 3, 'שן'), ing('רסק עגבניות', 1, 'קופסה'), ing('עגבניות מרוסקות', 400, 'גרם'),
       ing('גזר', 1, 'יחידה'), ing('שמן זית', 2, 'כף'), ing('מלח', 1, 'כפית'),
-      ing('פלפל שחור', 1, 'כפית'), ing('אורגנו', 1, 'כפית'), ing('פרמזן', 50, 'גרם'),
+      ing('פלפל שחור', 1, 'כפית'), ing('אורגנו', 1, 'כפית'),
     ],
   },
   {
@@ -416,28 +416,28 @@ export const RECIPES = [
     id: 'moussaka', nameHe: 'מוסקה', nameEn: 'Moussaka', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('חצילים', 3, 'יחידה'), ing('תפוחי אדמה', 3, 'יחידה'), ing('בשר טחון', 500, 'גרם'),
-      ing('בצל', 1, 'יחידה'), ing('רסק עגבניות', 2, 'כף'), ing('גבינה צהובה', 1, 'כוס'),
+      ing('בצל', 1, 'יחידה'), ing('רסק עגבניות', 2, 'כף'), ing('פירורי לחם', 0.5, 'כוס'),
     ],
   },
   {
     id: 'carbonara', nameHe: 'פסטה קרבונרה', nameEn: 'Pasta Carbonara', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('פסטה', 400, 'גרם'), ing('ביצים', 4, 'יחידה'), ing('פרמזן', 100, 'גרם'),
-      ing('נקניק הודו', 200, 'גרם'), ing('פלפל שחור', 1, 'כפית'),
+      ing('שמנת מתוקה', 100, 'מל'), ing('פלפל שחור', 1, 'כפית'),
     ],
   },
   {
-    id: 'lasagna', nameHe: 'לזניה', nameEn: 'Lasagna', servings: 4, mealTypes: ['lunch', 'dinner'],
+    id: 'lasagna', nameHe: 'לזניית ירקות', nameEn: 'Vegetable Lasagna', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
-      ing('דפי לזניה', 1, 'חבילה'), ing('בשר טחון', 500, 'גרם'), ing('רסק עגבניות', 1, 'קופסה'),
-      ing('גבינה צהובה', 300, 'גרם'), ing('שמנת מתוקה', 200, 'מל'),
+      ing('דפי לזניה', 1, 'חבילה'), ing('תרד', 3, 'כוס'), ing('פטריות', 300, 'גרם'),
+      ing('רסק עגבניות', 1, 'קופסה'), ing('גבינה צהובה', 300, 'גרם'), ing('שמנת מתוקה', 200, 'מל'),
     ],
   },
   {
     id: 'burger', nameHe: 'בורגר ביתי', nameEn: 'Homemade Burger', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
       ing('בשר טחון', 600, 'גרם'), ing('לחמניות', 4, 'יחידה'), ing('בצל', 1, 'יחידה'),
-      ing('חסה', 1, 'יחידה'), ing('עגבניות', 2, 'יחידה'), ing('גבינה צהובה', 4, 'פרוסה'),
+      ing('חסה', 1, 'יחידה'), ing('עגבניות', 2, 'יחידה'),
     ],
   },
   {
@@ -464,7 +464,7 @@ export const RECIPES = [
   {
     id: 'french-onion-soup', nameHe: 'מרק בצל צרפתי', nameEn: 'French Onion Soup', servings: 4, mealTypes: ['lunch', 'dinner'],
     ingredients: [
-      ing('בצל', 5, 'יחידה'), ing('חמאה', 2, 'כף'), ing('ציר בקר', 1, 'ליטר'),
+      ing('בצל', 5, 'יחידה'), ing('חמאה', 2, 'כף'), ing('ציר ירקות', 1, 'ליטר'),
       ing('לחם', 4, 'פרוסה'), ing('גבינה צהובה', 100, 'גרם'),
     ],
   },

@@ -764,6 +764,135 @@ $('#add-custom-recipe-btn').addEventListener('click', () => {
 });
 
 // ---------------------------------------------------------------------
+// "What can I make from my pantry?" suggestions
+// ---------------------------------------------------------------------
+// Pure local matching against the pantry the user already entered - no AI,
+// no network call, works fully offline. For each recipe, checks whether
+// each ingredient is covered in sufficient quantity (with unit conversion)
+// by what's in the pantry right now.
+function computePantryMatch(recipe) {
+  const results = recipe.ingredients.map((ing) => {
+    const unitInfo = UNIT_BY_ID[ing.unit];
+    if (!unitInfo) return { name: ing.name, covered: false };
+    const key = normalize(ing.name);
+    let have = 0;
+    state.pantry.forEach((p) => {
+      if (normalize(p.name) !== key) return;
+      const pUnitInfo = UNIT_BY_ID[p.unit];
+      if (!pUnitInfo || pUnitInfo.kind !== unitInfo.kind) return;
+      have += convert(p.quantity, p.unit, ing.unit) ?? 0;
+    });
+    return { name: ing.name, covered: have >= ing.quantity - 0.001 };
+  });
+  const total = results.length;
+  const covered = results.filter((r) => r.covered).length;
+  const missing = results.filter((r) => !r.covered).map((r) => r.name);
+  return { total, covered, missing, ratio: total ? covered / total : 0 };
+}
+
+function getPantrySuggestions() {
+  return allRecipes()
+    .map((recipe) => ({ recipe, match: computePantryMatch(recipe) }))
+    .filter((s) => s.match.covered > 0 && s.match.ratio >= 0.34)
+    .sort((a, b) => b.match.ratio - a.match.ratio || b.match.covered - a.match.covered)
+    .slice(0, 20);
+}
+
+function openPantrySuggestionsStep2(recipes) {
+  const dayChoices = new Map(recipes.map((r) => [r.id, null]));
+
+  const rows = recipes.map((r) => {
+    const chipRow = el('div', { class: 'flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-1 mt-2' });
+    const renderChips = () => renderChipGroup(
+      chipRow,
+      [
+        { value: '', label: 'ללא יום', selectedClass: 'bg-ink text-cream' },
+        ...DAY_NAMES.map((d, i) => ({ value: String(i), label: d, selectedClass: 'bg-pink-400 text-white' })),
+      ],
+      (v) => v === (dayChoices.get(r.id) === null ? '' : String(dayChoices.get(r.id))),
+      (v) => { dayChoices.set(r.id, v === '' ? null : Number(v)); renderChips(); },
+    );
+    renderChips();
+    return el('div', { class: 'border-2 border-ink rounded-xl p-2.5 mb-2.5 bg-white' }, [
+      el('div', { class: 'font-black' }, r.nameHe),
+      chipRow,
+    ]);
+  });
+
+  const form = el('form', {}, [
+    el('h2', { class: 'text-lg font-black mb-1' }, '📅 באיזה יום?'),
+    el('p', { class: 'text-sm font-semibold text-ink/60 mb-3' }, 'בחרו יום לכל מנה - אפשר גם להשאיר "ללא יום" ולקבוע מאוחר יותר.'),
+    ...rows,
+    el('button', {
+      type: 'submit',
+      class: 'w-full mt-2 bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all',
+    }, `✅ הוסיפו ${recipes.length} ארוחות לתכנון`),
+  ]);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    recipes.forEach((r) => {
+      state.meals.push({
+        id: uid(), name: r.nameHe, recipeId: r.id,
+        mealType: (r.mealTypes && r.mealTypes[0]) || 'dinner',
+        day: dayChoices.get(r.id),
+        ingredients: r.ingredients.map((i) => ({ ...i })),
+      });
+    });
+    persistMeals();
+    renderMealPlanning();
+    renderShopping();
+    closeModal();
+    showToast(`✨ נוספו ${recipes.length} ארוחות לתכנון!`);
+    showTab('plan');
+  });
+  openModal(form);
+}
+
+$('#pantry-suggest-btn').addEventListener('click', () => {
+  const suggestions = getPantrySuggestions();
+  if (suggestions.length === 0) {
+    showToast('⚠️ עדיין אין מספיק במזווה כדי להציע מתכונים');
+    return;
+  }
+  const selected = new Set();
+
+  const listEl = el('div', { class: 'space-y-2 max-h-[50vh] overflow-y-auto -mx-1 px-1' });
+  suggestions.forEach(({ recipe, match }) => {
+    const full = match.covered === match.total;
+    listEl.appendChild(el('label', {
+      class: `flex items-center gap-2 rounded-xl px-3 py-2 border-2 border-ink cursor-pointer ${full ? 'bg-lime-100' : 'bg-yellow-50'}`,
+    }, [
+      el('input', {
+        type: 'checkbox', class: 'w-5 h-5 accent-pink-500 shrink-0',
+        onchange: (e) => { if (e.target.checked) selected.add(recipe.id); else selected.delete(recipe.id); },
+      }),
+      el('div', { class: 'flex-1 min-w-0' }, [
+        el('div', { class: 'font-black text-ink truncate' }, recipe.nameHe),
+        el('div', { class: `text-xs font-bold ${full ? 'text-lime-800' : 'text-amber-700'}` },
+          full ? '✅ יש לכם הכל!' : `🟡 חסר: ${match.missing.join(', ')}`),
+      ]),
+    ]));
+  });
+
+  const form = el('form', {}, [
+    el('h2', { class: 'text-lg font-black mb-1' }, '💡 מה אפשר להכין מהמזווה?'),
+    el('p', { class: 'text-sm font-semibold text-ink/60 mb-3' }, 'סמנו את המנות שבא לכם להכין השבוע - הבחירה מבוססת על מה שכבר יש לכם בבית.'),
+    listEl,
+    el('button', {
+      type: 'submit',
+      class: 'w-full mt-4 bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all',
+    }, '← המשך לבחירת ימים'),
+  ]);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (selected.size === 0) { showToast('בחרו לפחות מנה אחת'); return; }
+    const chosenRecipes = suggestions.filter((s) => selected.has(s.recipe.id)).map((s) => s.recipe);
+    openPantrySuggestionsStep2(chosenRecipes);
+  });
+  openModal(form);
+});
+
+// ---------------------------------------------------------------------
 // AI recipe lookup (bring-your-own Claude API key)
 // ---------------------------------------------------------------------
 // When a typed dish matches nothing in the built-in or custom recipe
