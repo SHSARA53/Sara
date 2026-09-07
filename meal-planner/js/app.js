@@ -94,12 +94,9 @@ function showTab(tab) {
   $$('.tab-btn').forEach((b) => {
     const active = b.dataset.tab === tab;
     const pill = $('.tab-pill', b);
-    b.classList.toggle('text-ink/40', !active);
+    b.classList.toggle('text-ink/35', !active);
     b.classList.toggle('text-ink', active);
-    pill.classList.toggle('bg-yellow-300', active);
-    pill.classList.toggle('border-ink', active);
-    pill.classList.toggle('border-transparent', !active);
-    pill.classList.toggle('-translate-y-1', active);
+    pill.classList.toggle('bg-rose-100', active);
     b.setAttribute('aria-current', active ? 'page' : 'false');
   });
   if (tab === 'shopping') renderShopping();
@@ -154,9 +151,9 @@ function renderPantry() {
   CATEGORIES.forEach((cat) => {
     const items = grouped[cat.id];
     if (!items || items.length === 0) return;
-    pantryList.appendChild(el('h3', { class: 'px-1 pt-4 pb-1.5 text-sm font-black text-ink/70 first:pt-0' }, `${cat.icon} ${cat.label}`));
+    pantryList.appendChild(el('h3', { class: 'px-1 pt-4 pb-1.5 text-sm font-extrabold text-ink/70 first:pt-0' }, `${cat.icon} ${cat.label}`));
     items.forEach((item) => {
-      const row = el('div', { class: 'fade-in-item flex items-center gap-2 bg-white rounded-xl px-3 py-2 mb-2 border-[2.5px] border-ink shadow-[3px_3px_0_#1a1523]' }, [
+      const row = el('div', { class: 'fade-in-item flex items-center gap-2 bg-white rounded-2xl px-3 py-2.5 mb-2 shadow-sm' }, [
         el('div', { class: 'flex-1 min-w-0' }, [
           el('div', { class: 'font-bold text-ink truncate', text: item.name }),
           el('div', { class: 'text-xs font-semibold text-ink/50', text: `${fmtQty(item.quantity)} ${UNIT_BY_ID[item.unit]?.label ?? item.unit}` }),
@@ -184,18 +181,18 @@ function deletePantryItem(id) {
 function editPantryItem(id) {
   const item = state.pantry.find((p) => p.id === id);
   if (!item) return;
-  const nameInput = el('input', { type: 'text', value: item.name, class: 'w-full border-[2.5px] border-ink rounded-xl px-3 py-2 mb-3 font-medium' });
-  const qtyInput = el('input', { type: 'number', step: '0.01', min: '0', value: item.quantity, class: 'w-full border-[2.5px] border-ink rounded-xl px-3 py-2 mb-3 font-medium' });
-  const unitSelect = el('select', { class: 'w-full border-[2.5px] border-ink rounded-xl px-3 py-2 mb-3 font-medium' }, unitOptions(item.unit));
-  const catSelect = el('select', { class: 'w-full border-[2.5px] border-ink rounded-xl px-3 py-2 mb-4 font-medium' }, categoryOptions(item.category));
+  const nameInput = el('input', { type: 'text', value: item.name, class: 'w-full bg-white rounded-xl px-3 py-2 mb-3 font-medium' });
+  const qtyInput = el('input', { type: 'number', step: '0.01', min: '0', value: item.quantity, class: 'w-full bg-white rounded-xl px-3 py-2 mb-3 font-medium' });
+  const unitSelect = el('select', { class: 'w-full bg-white rounded-xl px-3 py-2 mb-3 font-medium' }, unitOptions(item.unit));
+  const catSelect = el('select', { class: 'w-full bg-white rounded-xl px-3 py-2 mb-4 font-medium' }, categoryOptions(item.category));
 
   const form = el('form', {}, [
-    el('h2', { class: 'text-lg font-black mb-4' }, '✏️ עריכת פריט מזווה'),
+    el('h2', { class: 'text-lg font-extrabold mb-4' }, '✏️ עריכת פריט מזווה'),
     el('label', { class: 'text-sm font-bold text-ink/60' }, 'שם'), nameInput,
     el('label', { class: 'text-sm font-bold text-ink/60' }, 'כמות'), qtyInput,
     el('label', { class: 'text-sm font-bold text-ink/60' }, 'יחידה'), unitSelect,
     el('label', { class: 'text-sm font-bold text-ink/60' }, 'קטגוריה'), catSelect,
-    el('button', { type: 'submit', class: 'w-full bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all' }, 'שמור'),
+    el('button', { type: 'submit', class: 'w-full bg-rose-300 text-rose-950 rounded-full py-2.5 font-bold active:scale-[0.98] transition-transform' }, 'שמור'),
   ]);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -239,7 +236,7 @@ const mealList = $('#meal-list');
 const mealEmpty = $('#meal-empty');
 const recipeDatalist = $('#recipe-suggestions');
 const mealTypeChipsEl = $('#mealtype-chips');
-const dayChipsEl = $('#day-chips');
+const daySelectEl = $('#day-select');
 
 // Current selection in the "add meal" form - driven by the chip groups
 // below instead of plain <select> elements for a livelier feel.
@@ -254,8 +251,8 @@ function renderChipGroup(container, options, isSelected, onSelect) {
     const selected = isSelected(opt.value);
     const btn = el('button', {
       type: 'button',
-      class: `shrink-0 rounded-full px-3 py-1.5 text-sm font-extrabold border-[2.5px] transition-all active:scale-95 ${
-        selected ? `${opt.selectedClass} border-ink shadow-[3px_3px_0_#1a1523] -translate-y-0.5` : 'bg-white text-ink/40 border-ink/20'
+      class: `shrink-0 rounded-full px-3 py-1.5 text-sm font-bold transition-all active:scale-95 ${
+        selected ? `${opt.selectedClass}` : 'bg-cream/60 text-ink/40'
       }`,
       onclick: () => onSelect(opt.value),
     }, opt.label);
@@ -272,17 +269,17 @@ function renderMealTypeChips() {
   );
 }
 
-function renderDayChips() {
-  const options = [
-    { value: '', label: 'ללא יום', selectedClass: 'bg-ink text-cream' },
-    ...DAY_NAMES.map((d, i) => ({ value: String(i), label: d, selectedClass: 'bg-pink-400 text-white' })),
+function dayOptionEls(selected) {
+  return [
+    el('option', { value: '', ...(selected === null ? { selected: 'selected' } : {}) }, 'ללא יום'),
+    ...DAY_NAMES.map((d, i) => el('option', { value: i, ...(selected === i ? { selected: 'selected' } : {}) }, d)),
   ];
-  renderChipGroup(
-    dayChipsEl,
-    options,
-    (v) => v === (mealFormState.day === null ? '' : String(mealFormState.day)),
-    (v) => { mealFormState.day = v === '' ? null : Number(v); renderDayChips(); },
-  );
+}
+
+function renderDaySelect() {
+  daySelectEl.innerHTML = '';
+  daySelectEl.append(...dayOptionEls(mealFormState.day));
+  daySelectEl.onchange = (e) => { mealFormState.day = e.target.value === '' ? null : Number(e.target.value); };
 }
 
 function populateRecipeSuggestions() {
@@ -301,14 +298,14 @@ function dayLabel(day) {
 
 function mealTypeSelect(meal) {
   return el('select', {
-    class: 'text-xs font-bold border-2 border-ink rounded-lg px-1.5 py-1 bg-white',
+    class: 'text-xs font-bold bg-cream/60 rounded-lg px-1.5 py-1',
     onchange: (e) => { meal.mealType = e.target.value; persistMeals(); renderMealPlanning(); },
   }, MEAL_TYPES.map((mt) => el('option', { value: mt.id, ...(meal.mealType === mt.id ? { selected: 'selected' } : {}) }, `${mt.icon} ${mt.label}`)));
 }
 
 function daySelect(meal) {
   return el('select', {
-    class: 'text-xs font-bold border-2 border-ink rounded-lg px-1.5 py-1 bg-white',
+    class: 'text-xs font-bold bg-cream/60 rounded-lg px-1.5 py-1',
     onchange: (e) => { meal.day = e.target.value === '' ? null : Number(e.target.value); persistMeals(); renderMealPlanning(); },
   }, [
     el('option', { value: '', ...(meal.day === null ? { selected: 'selected' } : {}) }, 'ללא יום'),
@@ -324,33 +321,33 @@ function renderMealPlanning() {
   dayOrder.forEach((day) => {
     const dayMeals = state.meals.filter((m) => m.day === day);
     if (dayMeals.length === 0) return;
-    mealList.appendChild(el('h3', { class: 'px-1 pt-4 pb-1.5 text-sm font-black text-ink/70 first:pt-0' }, `📅 ${dayLabel(day)}`));
+    mealList.appendChild(el('h3', { class: 'px-1 pt-4 pb-1.5 text-sm font-extrabold text-ink/70 first:pt-0' }, `📅 ${dayLabel(day)}`));
 
     MEAL_TYPES.forEach((mt) => {
       const meals = dayMeals.filter((m) => m.mealType === mt.id);
       if (meals.length === 0) return;
       mealList.appendChild(el('div', {
-        class: `fade-in-item inline-flex items-center gap-1 text-xs font-extrabold ${mt.chipText} ${mt.chipBg} border-2 border-ink rounded-full px-2.5 py-1 mb-1.5 mt-1`,
+        class: `fade-in-item inline-flex items-center gap-1 text-xs font-bold ${mt.chipText} ${mt.chipBg} rounded-full px-2.5 py-1 mb-1.5 mt-1`,
       }, `${mt.icon} ${mt.label}`));
 
       meals.forEach((meal) => {
         const recipe = meal.recipeId ? findRecipeById(meal.recipeId) : null;
         const isCustomUnmatched = meal.ingredients.length === 0;
-        const card = el('div', { class: `fade-in-item bg-white rounded-2xl px-3 py-3 mb-2.5 border-[2.5px] border-ink shadow-[4px_4px_0_#1a1523]` }, [
+        const card = el('div', { class: `fade-in-item bg-white rounded-2xl px-3 py-3 mb-2.5 shadow-sm` }, [
           el('div', { class: 'flex items-start justify-between gap-2' }, [
             el('div', { class: 'min-w-0' }, [
-              el('div', { class: 'font-black text-ink truncate', text: meal.name }),
+              el('div', { class: 'font-bold text-ink truncate', text: meal.name }),
               recipe?.nameEn ? el('div', { class: 'text-xs font-semibold text-ink/40', text: recipe.nameEn }) : null,
               el('div', { class: 'text-xs font-bold text-ink/50 mt-1', text: `${meal.ingredients.length} רכיבים` }),
               isCustomUnmatched
-                ? el('div', { class: 'text-xs font-bold text-orange-600 mt-1', text: meal.recipeId ? '⚠️ עדיין אין רכיבים - לחצו על "ערוך מתכון"' : '⚠️ מתכון לא נמצא – הוסיפו רכיבים ידנית' })
+                ? el('div', { class: 'text-xs font-bold text-orange-500 mt-1', text: meal.recipeId ? '⚠️ עדיין אין רכיבים - לחצו על "ערוך מתכון"' : '⚠️ מתכון לא נמצא – הוסיפו רכיבים ידנית' })
                 : null,
             ]),
             el('div', { class: 'flex flex-col items-end gap-1 shrink-0' }, [mealTypeSelect(meal), daySelect(meal)]),
           ]),
           el('div', { class: 'flex gap-2 mt-2.5' }, [
-            el('button', { class: 'text-sm px-3 py-1.5 rounded-full bg-violet-100 text-violet-800 font-extrabold border-2 border-ink active:scale-95 transition-transform', onclick: () => editMealIngredients(meal.id) }, '✏️ ערוך מתכון'),
-            el('button', { class: 'text-sm px-3 py-1.5 rounded-full bg-red-100 text-red-700 font-extrabold border-2 border-ink active:scale-95 transition-transform', onclick: () => deleteMeal(meal.id) }, '🗑️ הסר'),
+            el('button', { class: 'text-sm px-3 py-1.5 rounded-full bg-violet-50 text-violet-800 font-bold active:scale-95 transition-transform', onclick: () => editMealIngredients(meal.id) }, '✏️ ערוך מתכון'),
+            el('button', { class: 'text-sm px-3 py-1.5 rounded-full bg-red-50 text-red-600 font-bold active:scale-95 transition-transform', onclick: () => deleteMeal(meal.id) }, '🗑️ הסר'),
           ]),
         ]);
         mealList.appendChild(card);
@@ -371,12 +368,12 @@ function editMealIngredients(id) {
 
   const rowsContainer = el('div', { id: 'ing-rows' });
   function addRow(ing = { name: '', quantity: 1, unit: 'יחידה' }) {
-    const nameInput = el('input', { type: 'text', value: ing.name, placeholder: 'שם רכיב', class: 'flex-1 border-2 border-ink rounded-lg px-2 py-1.5 min-w-0 font-medium' });
-    const qtyInput = el('input', { type: 'number', step: '0.01', min: '0', value: ing.quantity, class: 'w-16 border-2 border-ink rounded-lg px-2 py-1.5 font-medium' });
-    const unitSelect = el('select', { class: 'w-24 border-2 border-ink rounded-lg px-1 py-1.5 text-sm font-medium' }, unitOptions(ing.unit));
+    const nameInput = el('input', { type: 'text', value: ing.name, placeholder: 'שם רכיב', class: 'flex-1 bg-white rounded-lg px-2 py-1.5 min-w-0 font-medium' });
+    const qtyInput = el('input', { type: 'number', step: '0.01', min: '0', value: ing.quantity, class: 'w-16 bg-white rounded-lg px-2 py-1.5 font-medium' });
+    const unitSelect = el('select', { class: 'w-24 bg-white rounded-lg px-1 py-1.5 text-sm font-medium' }, unitOptions(ing.unit));
     const row = el('div', { class: 'flex items-center gap-1.5 mb-2', 'data-row': '1' }, [
       nameInput, qtyInput, unitSelect,
-      el('button', { type: 'button', class: 'text-red-500 font-black px-2', onclick: () => row.remove() }, '✕'),
+      el('button', { type: 'button', class: 'text-red-500 font-extrabold px-2', onclick: () => row.remove() }, '✕'),
     ]);
     row._read = () => ({ name: nameInput.value.trim(), quantity: parseFloat(qtyInput.value) || 0, unit: unitSelect.value });
     rowsContainer.appendChild(row);
@@ -385,11 +382,11 @@ function editMealIngredients(id) {
   if (meal.ingredients.length === 0) addRow();
 
   const form = el('form', {}, [
-    el('h2', { class: 'text-lg font-black mb-1', text: meal.name }),
+    el('h2', { class: 'text-lg font-extrabold mb-1', text: meal.name }),
     el('p', { class: 'text-sm font-semibold text-ink/60 mb-3' }, 'רכיבים למתכון (ל-4 מנות)'),
     rowsContainer,
     el('button', { type: 'button', class: 'text-sm text-violet-700 font-extrabold mb-4', onclick: () => addRow() }, '+ הוסף רכיב'),
-    el('button', { type: 'submit', class: 'w-full bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all' }, 'שמור מתכון'),
+    el('button', { type: 'submit', class: 'w-full bg-rose-300 text-rose-950 rounded-full py-2.5 font-bold active:scale-[0.98] transition-transform' }, 'שמור מתכון'),
   ]);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -509,7 +506,7 @@ function goPlanEmptySlot(day, mealTypeId) {
   mealFormState.day = day;
   mealFormState.mealType = mealTypeId;
   renderMealTypeChips();
-  renderDayChips();
+  renderDaySelect();
   populateRecipeSuggestions();
   showTab('plan');
   setTimeout(() => $('#meal-name').focus(), 50);
@@ -524,12 +521,12 @@ function renderWeeklyGrid() {
     const isToday = dates[i].toDateString() === today.toDateString();
     const dayMeals = state.meals.filter((m) => m.day === i);
     const card = el('div', {
-      class: `fade-in-item bg-white rounded-2xl border-[2.5px] border-ink shadow-[4px_4px_0_#1a1523] p-3 ${isToday ? 'ring-[3px] ring-pink-400 ring-offset-2 ring-offset-cream' : ''}`,
+      class: `fade-in-item bg-white rounded-2xl shadow-sm p-3 ${isToday ? 'ring-2 ring-rose-200' : ''}`,
     }, [
       el('div', { class: 'flex items-center justify-between mb-2' }, [
         el('div', { class: 'flex items-center gap-1.5' }, [
-          el('span', { class: 'font-black' }, name),
-          isToday ? el('span', { class: 'text-[10px] bg-pink-500 text-white border-2 border-ink rounded-full px-1.5 py-0.5 font-extrabold' }, 'היום') : null,
+          el('span', { class: 'font-bold' }, name),
+          isToday ? el('span', { class: 'text-[10px] bg-rose-200 text-rose-900 rounded-full px-1.5 py-0.5 font-bold' }, 'היום') : null,
         ]),
         el('span', { class: 'text-xs font-bold text-ink/40' }, `${dates[i].getDate()}.${dates[i].getMonth() + 1}`),
       ]),
@@ -538,13 +535,13 @@ function renderWeeklyGrid() {
         const label = meals.map((m) => m.name).join('، ') || 'הוסיפו ארוחה';
         return el('button', {
           type: 'button',
-          class: `w-full flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm text-right border-2 transition-colors ${meals.length ? `${mt.softBg} border-ink/10` : 'bg-cream border-dashed border-ink/25 hover:border-ink/50'}`,
+          class: `w-full flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm text-right transition-colors ${meals.length ? `${mt.softBg}` : 'bg-cream/60 hover:bg-cream'}`,
           onclick: () => goPlanEmptySlot(i, mt.id),
         }, [
           el('span', {}, mt.icon),
-          el('span', { class: `font-extrabold ${mt.softText} shrink-0` }, mt.label + ':'),
+          el('span', { class: `font-bold ${mt.softText} shrink-0` }, mt.label + ':'),
           el('span', { class: `flex-1 min-w-0 truncate font-semibold ${meals.length ? 'text-ink' : 'text-ink/35'}` }, label),
-          !meals.length ? el('span', { class: 'text-pink-500 text-sm font-black shrink-0' }, '+') : null,
+          !meals.length ? el('span', { class: 'text-rose-400 text-sm font-bold shrink-0' }, '+') : null,
         ]);
       })),
     ]);
@@ -556,10 +553,10 @@ function renderWeeklyGrid() {
   const noDay = state.meals.filter((m) => m.day === null || m.day === undefined);
   if (noDay.length > 0) {
     weeklyGrid.insertAdjacentElement('afterend', el('div', { id: 'no-day-section', class: 'fade-in-item mt-1' }, [
-      el('div', { class: 'text-sm font-black text-ink/60 mb-1.5' }, '🗓️ ללא יום קבוע'),
+      el('div', { class: 'text-sm font-bold text-ink/50 mb-1.5' }, '🗓️ ללא יום קבוע'),
       el('div', { class: 'flex flex-wrap gap-1.5' }, noDay.map((m) => {
         const mt = MEAL_TYPE_BY_ID[m.mealType];
-        return el('span', { class: `text-xs ${mt.chipBg} ${mt.chipText} border-2 border-ink rounded-full px-2.5 py-1 font-bold` }, `${mt.icon} ${m.name}`);
+        return el('span', { class: `text-xs ${mt.chipBg} ${mt.chipText} rounded-full px-2.5 py-1 font-bold` }, `${mt.icon} ${m.name}`);
       })),
     ]));
   }
@@ -634,14 +631,14 @@ function renderShopping() {
   CATEGORIES.forEach((cat) => {
     const items = grouped[cat.id];
     if (!items || items.length === 0) return;
-    shoppingList.appendChild(el('h3', { class: 'px-1 pt-4 pb-1.5 text-sm font-black text-ink/70 first:pt-0' }, `${cat.icon} ${cat.label}`));
+    shoppingList.appendChild(el('h3', { class: 'px-1 pt-4 pb-1.5 text-sm font-extrabold text-ink/70 first:pt-0' }, `${cat.icon} ${cat.label}`));
     items
       .sort((a, b) => (state.bought[a.key] ? 1 : 0) - (state.bought[b.key] ? 1 : 0))
       .forEach((item) => {
         const bought = !!state.bought[item.key];
-        const row = el('label', { class: `fade-in-item flex items-center gap-2 bg-white rounded-xl px-3 py-2 mb-2 border-[2.5px] border-ink shadow-[3px_3px_0_#1a1523] ${bought ? 'opacity-40' : ''}` }, [
+        const row = el('label', { class: `fade-in-item flex items-center gap-2 bg-white rounded-2xl px-3 py-2.5 mb-2 shadow-sm ${bought ? 'opacity-40' : ''}` }, [
           el('input', {
-            type: 'checkbox', class: 'check-pop w-5 h-5 accent-pink-500 shrink-0', ...(bought ? { checked: 'checked' } : {}),
+            type: 'checkbox', class: 'check-pop w-5 h-5 accent-rose-400 shrink-0', ...(bought ? { checked: 'checked' } : {}),
             onchange: (e) => { state.bought[item.key] = e.target.checked; persistBought(); renderShopping(); },
           }),
           el('div', { class: 'flex-1 min-w-0' }, [
@@ -655,9 +652,9 @@ function renderShopping() {
 
   shoppingSatisfied.innerHTML = '';
   if (satisfied.length > 0) {
-    shoppingSatisfied.appendChild(el('details', { class: 'fade-in-item mt-3 bg-lime-100 border-[2.5px] border-ink rounded-xl px-3 py-2' }, [
-      el('summary', { class: 'text-sm font-extrabold text-lime-900 cursor-pointer' }, `✅ יש לכם מספיק בבית (${satisfied.length})`),
-      el('div', { class: 'mt-2' }, satisfied.map((item) => el('div', { class: 'text-sm font-semibold text-lime-900/70 py-1 flex justify-between' }, [
+    shoppingSatisfied.appendChild(el('details', { class: 'fade-in-item mt-3 bg-emerald-50 rounded-2xl px-3 py-2' }, [
+      el('summary', { class: 'text-sm font-bold text-emerald-900 cursor-pointer' }, `✅ יש לכם מספיק בבית (${satisfied.length})`),
+      el('div', { class: 'mt-2' }, satisfied.map((item) => el('div', { class: 'text-sm font-semibold text-emerald-900/70 py-1 flex justify-between' }, [
         el('span', {}, item.name),
         el('span', {}, `${fmtQty(item.quantity)} ${UNIT_BY_ID[item.unit]?.label ?? item.unit}`),
       ]))),
@@ -726,13 +723,13 @@ $('#new-week-btn').addEventListener('click', () => {
 // Custom recipe creation
 // ---------------------------------------------------------------------
 $('#add-custom-recipe-btn').addEventListener('click', () => {
-  const nameHe = el('input', { type: 'text', placeholder: 'שם המתכון בעברית', class: 'w-full border-2 border-ink rounded-xl px-3 py-2 mb-3 font-medium' });
-  const nameEn = el('input', { type: 'text', placeholder: 'Recipe name in English (optional)', class: 'w-full border-2 border-ink rounded-xl px-3 py-2 mb-3 font-medium' });
+  const nameHe = el('input', { type: 'text', placeholder: 'שם המתכון בעברית', class: 'w-full bg-white rounded-xl px-3 py-2 mb-3 font-medium' });
+  const nameEn = el('input', { type: 'text', placeholder: 'Recipe name in English (optional)', class: 'w-full bg-white rounded-xl px-3 py-2 mb-3 font-medium' });
   const form = el('form', {}, [
-    el('h2', { class: 'text-lg font-black mb-4' }, '✨ מתכון חדש'),
+    el('h2', { class: 'text-lg font-extrabold mb-4' }, '✨ מתכון חדש'),
     nameHe, nameEn,
     el('p', { class: 'text-xs font-semibold text-ink/50 mb-3' }, 'בשלב הבא תוכלו להוסיף לו רכיבים.'),
-    el('button', { type: 'submit', class: 'w-full bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all' }, 'המשך להוספת רכיבים ←'),
+    el('button', { type: 'submit', class: 'w-full bg-rose-300 text-rose-950 rounded-full py-2.5 font-bold active:scale-[0.98] transition-transform' }, 'המשך להוספת רכיבים ←'),
   ]);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -813,25 +810,25 @@ function openPantrySuggestionsStep2(recipes) {
       chipRow,
       [
         { value: '', label: 'ללא יום', selectedClass: 'bg-ink text-cream' },
-        ...DAY_NAMES.map((d, i) => ({ value: String(i), label: d, selectedClass: 'bg-pink-400 text-white' })),
+        ...DAY_NAMES.map((d, i) => ({ value: String(i), label: d, selectedClass: 'bg-rose-300 text-rose-950' })),
       ],
       (v) => v === (dayChoices.get(r.id) === null ? '' : String(dayChoices.get(r.id))),
       (v) => { dayChoices.set(r.id, v === '' ? null : Number(v)); renderChips(); },
     );
     renderChips();
-    return el('div', { class: 'border-2 border-ink rounded-xl p-2.5 mb-2.5 bg-white' }, [
-      el('div', { class: 'font-black' }, r.nameHe),
+    return el('div', { class: 'bg-white rounded-2xl p-2.5 mb-2.5 shadow-sm' }, [
+      el('div', { class: 'font-bold' }, r.nameHe),
       chipRow,
     ]);
   });
 
   const form = el('form', {}, [
-    el('h2', { class: 'text-lg font-black mb-1' }, '📅 באיזה יום?'),
-    el('p', { class: 'text-sm font-semibold text-ink/60 mb-3' }, 'בחרו יום לכל מנה - אפשר גם להשאיר "ללא יום" ולקבוע מאוחר יותר.'),
+    el('h2', { class: 'text-lg font-extrabold mb-1' }, '📅 באיזה יום?'),
+    el('p', { class: 'text-sm font-semibold text-ink/50 mb-3' }, 'בחרו יום לכל מנה - אפשר גם להשאיר "ללא יום" ולקבוע מאוחר יותר.'),
     ...rows,
     el('button', {
       type: 'submit',
-      class: 'w-full mt-2 bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all',
+      class: 'w-full mt-2 bg-rose-300 text-rose-950 rounded-full py-2.5 font-bold active:scale-[0.98] transition-transform',
     }, `✅ הוסיפו ${recipes.length} ארוחות לתכנון`),
   ]);
   form.addEventListener('submit', (e) => {
@@ -866,27 +863,27 @@ $('#pantry-suggest-btn').addEventListener('click', () => {
   suggestions.forEach(({ recipe, match }) => {
     const full = match.covered === match.total;
     listEl.appendChild(el('label', {
-      class: `flex items-center gap-2 rounded-xl px-3 py-2 border-2 border-ink cursor-pointer ${full ? 'bg-lime-100' : 'bg-yellow-50'}`,
+      class: `flex items-center gap-2 rounded-2xl px-3 py-2 cursor-pointer ${full ? 'bg-emerald-50' : 'bg-amber-50'}`,
     }, [
       el('input', {
-        type: 'checkbox', class: 'w-5 h-5 accent-pink-500 shrink-0',
+        type: 'checkbox', class: 'w-5 h-5 accent-rose-400 shrink-0',
         onchange: (e) => { if (e.target.checked) selected.add(recipe.id); else selected.delete(recipe.id); },
       }),
       el('div', { class: 'flex-1 min-w-0' }, [
-        el('div', { class: 'font-black text-ink truncate' }, recipe.nameHe),
-        el('div', { class: `text-xs font-bold ${full ? 'text-lime-800' : 'text-amber-700'}` },
+        el('div', { class: 'font-bold text-ink truncate' }, recipe.nameHe),
+        el('div', { class: `text-xs font-bold ${full ? 'text-emerald-700' : 'text-amber-700'}` },
           full ? '✅ יש לכם הכל!' : `🟡 חסר: ${match.missing.join(', ')}`),
       ]),
     ]));
   });
 
   const form = el('form', {}, [
-    el('h2', { class: 'text-lg font-black mb-1' }, '💡 מה אפשר להכין מהמזווה?'),
-    el('p', { class: 'text-sm font-semibold text-ink/60 mb-3' }, 'סמנו את המנות שבא לכם להכין השבוע - הבחירה מבוססת על מה שכבר יש לכם בבית.'),
+    el('h2', { class: 'text-lg font-extrabold mb-1' }, '💡 מה אפשר להכין מהמזווה?'),
+    el('p', { class: 'text-sm font-semibold text-ink/50 mb-3' }, 'סמנו את המנות שבא לכם להכין השבוע - הבחירה מבוססת על מה שכבר יש לכם בבית.'),
     listEl,
     el('button', {
       type: 'submit',
-      class: 'w-full mt-4 bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all',
+      class: 'w-full mt-4 bg-rose-300 text-rose-950 rounded-full py-2.5 font-bold active:scale-[0.98] transition-transform',
     }, '← המשך לבחירת ימים'),
   ]);
   form.addEventListener('submit', (e) => {
@@ -963,10 +960,10 @@ $('#ai-settings-btn').addEventListener('click', () => {
   const hasKey = !!store.getApiKey();
   const keyInput = el('input', {
     type: 'password', placeholder: 'sk-ant-...', autocomplete: 'off',
-    value: store.getApiKey(), class: 'w-full border-2 border-ink rounded-xl px-3 py-2 mb-3 font-mono text-sm',
+    value: store.getApiKey(), class: 'w-full bg-white rounded-xl px-3 py-2 mb-3 font-mono text-sm',
   });
   const form = el('form', {}, [
-    el('h2', { class: 'text-lg font-black mb-2' }, '🤖 חיפוש מתכונים עם AI'),
+    el('h2', { class: 'text-lg font-extrabold mb-2' }, '🤖 חיפוש מתכונים עם AI'),
     el('p', { class: 'text-sm font-medium text-ink/60 mb-3' }, [
       'כשמקלידים שם מנה שלא קיימת עדיין באפליקציה, ה-AI יכתוב לה מתכון אמיתי במקום להשאיר אותה ריקה. ',
       'המפתח נשמר רק בטלפון הזה ונשלח ישירות ל-Anthropic - לא דרכי ולא לאף אחד אחר. השימוש כרוך בתשלום קטן (אגורות) לכל מתכון, דרך חשבון ה-API שלכם.',
@@ -979,10 +976,10 @@ $('#ai-settings-btn').addEventListener('click', () => {
     keyInput,
     el('div', { class: 'flex gap-2' }, [
       hasKey ? el('button', {
-        type: 'button', class: 'flex-1 bg-white text-red-600 border-[2.5px] border-ink rounded-full py-2.5 font-extrabold shadow-[3px_3px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all',
+        type: 'button', class: 'flex-1 bg-white text-red-500 rounded-full py-2.5 font-bold active:scale-[0.98] transition-transform',
         onclick: () => { store.setApiKey(''); closeModal(); showToast('🗑️ המפתח הוסר'); },
       }, 'הסר מפתח') : null,
-      el('button', { type: 'submit', class: 'flex-1 bg-pink-500 text-white border-[3px] border-ink rounded-full py-2.5 font-extrabold shadow-[4px_4px_0_#1a1523] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all' }, 'שמור'),
+      el('button', { type: 'submit', class: 'flex-1 bg-rose-300 text-rose-950 rounded-full py-2.5 font-bold active:scale-[0.98] transition-transform' }, 'שמור'),
     ]),
   ]);
   form.addEventListener('submit', (e) => {
@@ -1005,7 +1002,7 @@ $$('.tab-btn').forEach((btn) => btn.addEventListener('click', () => showTab(btn.
 $('#pantry-unit').append(...unitOptions('יחידה'));
 populatePantrySuggestions();
 renderMealTypeChips();
-renderDayChips();
+renderDaySelect();
 populateRecipeSuggestions();
 renderPantry();
 renderMealPlanning();

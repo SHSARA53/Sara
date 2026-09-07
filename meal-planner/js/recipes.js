@@ -18,17 +18,16 @@ export const CATEGORIES = [
 
 export const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 
-// The three daily meal slots the planner is built around. Bold, saturated,
-// pop-art-flat colors (not soft pastels) to match the app's loud visual
-// identity. Colors are full literal Tailwind class names (not built with
-// string interpolation) so the CSS build's content scanner can find them.
-// chipText pairs with the bold chipBg (a solid, saturated fill); softText
-// pairs with softBg (a pale tint) since a bold chip's text color isn't
-// always readable on its own pale background (white-on-violet-100, say).
+// The three daily meal slots the planner is built around. Soft pastel tints
+// throughout - no saturated fills - to match the app's calm visual identity.
+// Colors are full literal Tailwind class names (not built with string
+// interpolation) so the CSS build's content scanner can find them. chipBg is
+// used for the selected chip in the meal-type picker; softBg/softText are
+// used for the paler tint shown on meal cards and the weekly grid.
 export const MEAL_TYPES = [
-  { id: 'breakfast', label: 'בוקר', icon: '🌅', chipBg: 'bg-yellow-300', chipText: 'text-ink', softBg: 'bg-yellow-100', softText: 'text-ink' },
-  { id: 'lunch', label: 'צהריים', icon: '☀️', chipBg: 'bg-lime-300', chipText: 'text-ink', softBg: 'bg-lime-100', softText: 'text-ink' },
-  { id: 'dinner', label: 'ערב', icon: '🌙', chipBg: 'bg-violet-500', chipText: 'text-white', softBg: 'bg-violet-100', softText: 'text-violet-800' },
+  { id: 'breakfast', label: 'בוקר', icon: '🌅', chipBg: 'bg-amber-200', chipText: 'text-amber-900', softBg: 'bg-amber-50', softText: 'text-amber-800' },
+  { id: 'lunch', label: 'צהריים', icon: '☀️', chipBg: 'bg-emerald-200', chipText: 'text-emerald-900', softBg: 'bg-emerald-50', softText: 'text-emerald-800' },
+  { id: 'dinner', label: 'ערב', icon: '🌙', chipBg: 'bg-violet-200', chipText: 'text-violet-900', softBg: 'bg-violet-50', softText: 'text-violet-800' },
 ];
 
 export const MEAL_TYPE_BY_ID = Object.fromEntries(MEAL_TYPES.map((m) => [m.id, m]));
@@ -84,7 +83,7 @@ export const INGREDIENT_CATEGORY_MAP = {
   'תירס מתוק': 'produce', 'חסה': 'produce', 'אפונה': 'produce', 'בננה': 'produce',
   'תותים': 'produce', 'תרד': 'produce', 'אבוקדו': 'produce', 'ענבים': 'produce',
   'תפוז': 'produce', 'תפוח': 'produce', 'נענע': 'produce', 'סלק': 'produce',
-  'פטריות': 'produce', 'חציל': 'produce', 'חצילים': 'produce',
+  'פטריות': 'produce', 'חציל': 'produce', 'חצילים': 'produce', 'ברוקולי': 'produce',
 
   'בשר טחון': 'meat', 'חזה עוף': 'meat', 'שוקי עוף': 'meat', 'עוף שלם': 'meat',
   'חלקי עוף': 'meat', 'כרעיים עוף': 'meat', 'בשר בקר': 'meat', 'כתף בקר': 'meat',
@@ -100,11 +99,12 @@ export const INGREDIENT_CATEGORY_MAP = {
   'חומוס יבש': 'dry', 'חומוס מבושל': 'dry', 'טחינה גולמית': 'dry', 'פירורי לחם': 'dry',
   'שמרים יבשים': 'dry', 'אבקת אפייה': 'dry', 'סוכר': 'dry', 'קוסקוס': 'dry',
   'בורגול': 'dry', 'גרנולה': 'dry', 'שיבולת שועל': 'dry', 'דפי לזניה': 'dry',
+  'קינואה': 'dry', 'צנוברים': 'dry',
 
   'רסק עגבניות': 'canned', 'עגבניות מרוסקות': 'canned', 'זיתי קלמטה': 'canned',
   'רוטב סויה': 'canned', 'דבש': 'canned', 'מיונז': 'canned', 'חלב קוקוס': 'canned',
   'שעועית אדומה': 'canned', 'עמבה': 'canned', 'ציר עוף': 'canned', 'ציר ירקות': 'canned',
-  'ציר בקר': 'canned',
+  'ציר בקר': 'canned', 'שעועית לבנה': 'canned', 'שעועית שחורה': 'canned',
 
   'מלח': 'spices', 'פלפל שחור': 'spices', 'אורגנו': 'spices', 'כמון': 'spices',
   'פפריקה': 'spices', 'כוסברה טחונה': 'spices', 'אגוז מוסקט': 'spices', 'שומשום': 'spices',
@@ -149,7 +149,7 @@ function ing(name, quantity, unit) {
   return { name, quantity, unit, category: guessCategory(name) };
 }
 
-// 26 built-in recipes, ingredient quantities scaled for 4 servings.
+// Built-in recipes, ingredient quantities scaled for 4 servings.
 export const RECIPES = [
   {
     id: 'omelette', nameHe: 'חביתת ירקות', nameEn: 'Vegetable Omelette', servings: 4, mealTypes: ['breakfast'],
@@ -542,6 +542,132 @@ export const RECIPES = [
     ingredients: [
       ing('חצילים', 3, 'יחידה'), ing('טחינה גולמית', 0.5, 'כוס'), ing('לימון', 1, 'יחידה'),
       ing('שום', 1, 'שן'), ing('פטרוזיליה', 1, 'יחידה'),
+    ],
+  },
+  {
+    id: 'hummus-egg-toast', nameHe: 'טוסט חומוס וביצה', nameEn: 'Hummus & Egg Toast', servings: 4, mealTypes: ['breakfast'],
+    ingredients: [
+      ing('לחם טוסט', 8, 'פרוסה'), ing('חומוס מבושל', 1, 'כוס'), ing('ביצים', 4, 'יחידה'),
+      ing('לימון', 1, 'יחידה'), ing('שמן זית', 2, 'כף'),
+    ],
+  },
+  {
+    id: 'bulgarian-cheese-omelette', nameHe: 'חביתת גבינה בולגרית', nameEn: 'Bulgarian Cheese Omelette', servings: 4, mealTypes: ['breakfast'],
+    ingredients: [
+      ing('ביצים', 8, 'יחידה'), ing('גבינה בולגרית', 150, 'גרם'), ing('עגבניות', 2, 'יחידה'),
+      ing('שמן זית', 1, 'כף'), ing('מלח', 1, 'כפית'),
+    ],
+  },
+  {
+    id: 'potato-burekas', nameHe: 'בורקס תפוחי אדמה', nameEn: 'Potato Burekas', servings: 4, mealTypes: ['breakfast'],
+    ingredients: [
+      ing('בצק עלים', 1, 'חבילה'), ing('תפוחי אדמה', 4, 'יחידה'), ing('בצל', 1, 'יחידה'),
+      ing('ביצים', 1, 'יחידה'), ing('מלח', 1, 'כפית'),
+    ],
+  },
+  {
+    id: 'red-lentil-soup', nameHe: 'מרק עדשים אדומות', nameEn: 'Red Lentil Soup', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('עדשים', 2, 'כוס'), ing('בצל', 1, 'יחידה'), ing('גזר', 2, 'יחידה'),
+      ing('כמון', 1, 'כפית'), ing('כורכום', 0.5, 'כפית'), ing('ציר ירקות', 1, 'קופסה'),
+    ],
+  },
+  {
+    id: 'white-beans-tomato', nameHe: 'שעועית לבנה ברוטב עגבניות', nameEn: 'White Beans in Tomato Sauce', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('שעועית לבנה', 2, 'קופסה'), ing('עגבניות מרוסקות', 400, 'גרם'), ing('בצל', 1, 'יחידה'),
+      ing('שום', 2, 'שן'), ing('שמן זית', 2, 'כף'),
+    ],
+  },
+  {
+    id: 'aglio-olio', nameHe: 'פסטה שמן זית ושום', nameEn: 'Spaghetti Aglio e Olio', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('פסטה', 400, 'גרם'), ing('שום', 4, 'שן'), ing('שמן זית', 4, 'כף'),
+      ing('פפריקה חריפה', 0.5, 'כפית'), ing('פטרוזיליה', 1, 'יחידה'),
+    ],
+  },
+  {
+    id: 'mushroom-soup', nameHe: 'מרק פטריות', nameEn: 'Mushroom Soup', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('פטריות', 500, 'גרם'), ing('בצל', 1, 'יחידה'), ing('שום', 2, 'שן'),
+      ing('ציר ירקות', 1, 'קופסה'), ing('שמן זית', 1, 'כף'),
+    ],
+  },
+  {
+    id: 'fish-patties', nameHe: 'קציצות דגים', nameEn: 'Fish Patties', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('פילה דג לבן', 600, 'גרם'), ing('בצל', 1, 'יחידה'), ing('ביצים', 1, 'יחידה'),
+      ing('פירורי לחם', 0.5, 'כוס'), ing('כמון', 1, 'כפית'),
+    ],
+  },
+  {
+    id: 'honey-lemon-drumsticks', nameHe: 'כרעיים עוף בדבש ולימון', nameEn: 'Honey Lemon Drumsticks', servings: 4, mealTypes: ['dinner'],
+    ingredients: [
+      ing('כרעיים עוף', 8, 'יחידה'), ing('דבש', 3, 'כף'), ing('לימון', 2, 'יחידה'),
+      ing('שום', 3, 'שן'), ing('פפריקה', 1, 'כפית'),
+    ],
+  },
+  {
+    id: 'broccoli-pasta', nameHe: 'פסטה ברוקולי ושום', nameEn: 'Broccoli Garlic Pasta', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('פסטה', 400, 'גרם'), ing('ברוקולי', 500, 'גרם'), ing('שום', 3, 'שן'),
+      ing('שמן זית', 3, 'כף'), ing('פרמזן', 50, 'גרם'),
+    ],
+  },
+  {
+    id: 'tuna-salad', nameHe: 'סלט טונה', nameEn: 'Tuna Salad', servings: 4, mealTypes: ['lunch'],
+    ingredients: [
+      ing('טונה', 2, 'קופסה'), ing('מלפפון', 2, 'יחידה'), ing('עגבניות', 2, 'יחידה'),
+      ing('בצל סגול', 0.5, 'יחידה'), ing('מיונז', 2, 'כף'),
+    ],
+  },
+  {
+    id: 'corn-soup', nameHe: 'מרק תירס', nameEn: 'Corn Soup', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('תירס', 3, 'כוס'), ing('בצל', 1, 'יחידה'), ing('תפוחי אדמה', 2, 'יחידה'),
+      ing('ציר ירקות', 1, 'קופסה'), ing('שמן זית', 1, 'כף'),
+    ],
+  },
+  {
+    id: 'tuna-patties', nameHe: 'קציצות טונה', nameEn: 'Tuna Patties', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('טונה', 3, 'קופסה'), ing('ביצים', 2, 'יחידה'), ing('פירורי לחם', 0.5, 'כוס'),
+      ing('בצל ירוק', 3, 'יחידה'), ing('לימון', 1, 'יחידה'),
+    ],
+  },
+  {
+    id: 'cheese-latkes', nameHe: 'לביבות גבינה', nameEn: 'Cheese Latkes', servings: 4, mealTypes: ['breakfast'],
+    ingredients: [
+      ing('גבינה בולגרית', 250, 'גרם'), ing('ביצים', 2, 'יחידה'), ing('קמח', 0.5, 'כוס'),
+      ing('סוכר', 1, 'כף'),
+    ],
+  },
+  {
+    id: 'pesto-pasta', nameHe: 'פסטה פסטו', nameEn: 'Pesto Pasta', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('פסטה', 400, 'גרם'), ing('בזיליקום', 2, 'יחידה'), ing('פרמזן', 50, 'גרם'),
+      ing('שמן זית', 4, 'כף'), ing('צנוברים', 50, 'גרם'),
+    ],
+  },
+  {
+    id: 'rice-black-beans', nameHe: 'אורז ושעועית שחורה', nameEn: 'Rice and Black Beans', servings: 4, mealTypes: ['lunch', 'dinner'],
+    ingredients: [
+      ing('אורז', 2, 'כוס'), ing('שעועית שחורה', 2, 'קופסה'), ing('בצל', 1, 'יחידה'),
+      ing('כמון', 1, 'כפית'), ing('פלפל צבעוני', 1, 'יחידה'),
+    ],
+  },
+  {
+    id: 'quinoa-salad', nameHe: 'סלט קינואה', nameEn: 'Quinoa Salad', servings: 4, mealTypes: ['lunch'],
+    ingredients: [
+      ing('קינואה', 1, 'כוס'), ing('מלפפון', 2, 'יחידה'), ing('עגבניות שרי', 200, 'גרם'),
+      ing('לימון', 1, 'יחידה'), ing('שמן זית', 2, 'כף'), ing('נענע', 1, 'יחידה'),
+    ],
+  },
+  {
+    id: 'lemon-garlic-chicken', nameHe: 'עוף בגריל עם לימון ושום', nameEn: 'Lemon Garlic Grilled Chicken', servings: 4, mealTypes: ['dinner'],
+    ingredients: [
+      ing('חזה עוף', 600, 'גרם'), ing('לימון', 2, 'יחידה'), ing('שום', 4, 'שן'),
+      ing('שמן זית', 2, 'כף'), ing('אורגנו', 1, 'כפית'),
     ],
   },
 ];

@@ -19,21 +19,11 @@ input, select, textarea, button {
   height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #ec4899;
-  border: 1px solid #1a1523;
+  background: #e8929e;
   border-radius: 999px;
 }
 
-/* Playful micro-interactions --------------------------------------- */
-
-@keyframes wiggle {
-  0%, 100% { transform: rotate(-8deg); }
-  50% { transform: rotate(8deg); }
-}
-.wiggle {
-  animation: wiggle 2.4s ease-in-out infinite;
-  transform-origin: 65% 65%;
-}
+/* Small, calm micro-interactions ------------------------------------ */
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(6px); }

@@ -62,13 +62,13 @@ function encodePNG(width, height, rgba) {
 
 // --- Icon drawing -----------------------------------------------------
 
-// Bold, flat, pop-art palette to match the app's neo-brutalist look:
-// solid sunshine-yellow ground, thick black outlines, saturated accents.
-const BG = [250, 204, 21]; // yellow-400
+// Soft pastel palette to match the app's calm, rounded look: a blush-rose
+// ground, a soft plum outline (not black), and pastel produce dots.
+const BG = [246, 205, 214]; // soft rose
 const WHITE = [255, 255, 255];
-const INK = [26, 21, 35]; // near-black outline/text color used across the app
-const PINK = [236, 72, 153]; // pink-500 produce dot
-const VIOLET = [139, 92, 246]; // violet-500 produce dot
+const INK = [74, 67, 88]; // soft plum-grey outline color used across the app
+const PINK = [245, 201, 155]; // soft peach produce dot
+const VIOLET = [191, 234, 216]; // soft mint produce dot
 
 function bgColorAt() {
   return BG;
